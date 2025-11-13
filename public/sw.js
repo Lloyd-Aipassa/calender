@@ -88,10 +88,16 @@ self.addEventListener('notificationclick', (event) => {
 
 // Fetch event - cache strategy (network first, fallback to cache)
 self.addEventListener('fetch', (event) => {
+  // Skip caching voor POST/PUT/DELETE requests
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone response voor cache
+        // Clone response voor cache (alleen GET requests)
         const responseToCache = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseToCache);
