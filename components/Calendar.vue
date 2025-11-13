@@ -6,9 +6,11 @@
         <p v-if="userName" class="user-name">{{ userName }}</p>
       </div>
       <div class="header-actions">
-        <button @click="goToSettings" class="btn-secondary">⚙️ Instellingen</button>
-        <button @click="showAddEvent = true" class="btn-primary">Nieuwe Afspraak</button>
-        <button @click="logout" class="btn-logout">Uitloggen</button>
+        <button @click="goToSettings" class="btn-secondary">
+          <img src="/svg/gear.svg" width="24" alt="instelingen" />
+        </button>
+        <button @click="showAddEvent = true" class="btn-primary"><img src="/svg/calendar.svg" width="24" alt="instelingen" /></button>
+        <button @click="logout" class="btn-logout"><img src="/svg/logout.svg" width="24" alt="instelingen" /></button>
       </div>
     </div>
 
@@ -182,7 +184,6 @@
         </form>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -581,15 +582,12 @@ async function loadEventsAPI() {
   try {
     console.log('Loading events from API...'); // Debug log
 
-    const response = await $fetch(
-      `${apiBase}/get_events.php`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      }
-    );
+    const response = await $fetch(`${apiBase}/get_events.php`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
 
     console.log('API Response:', response); // Debug log
     console.log('Events found:', response.events?.length || 0); // Debug log
@@ -606,17 +604,14 @@ async function createEventAPI(event) {
   try {
     console.log('Making API call to create event:', event);
 
-    const response = await $fetch(
-      `${apiBase}/create_event.php`,
-      {
-        method: 'POST',
-        body: JSON.stringify(event),
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      }
-    );
+    const response = await $fetch(`${apiBase}/create_event.php`, {
+      method: 'POST',
+      body: JSON.stringify(event),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
 
     console.log('Raw API response:', response);
     return response;
@@ -629,17 +624,14 @@ async function createEventAPI(event) {
 
 async function updateEventAPI(event) {
   try {
-    const response = await $fetch(
-      `${apiBase}/update_event.php`,
-      {
-        method: 'POST',
-        body: JSON.stringify(event),
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      }
-    );
+    const response = await $fetch(`${apiBase}/update_event.php`, {
+      method: 'POST',
+      body: JSON.stringify(event),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
     return response;
   } catch (error) {
     console.error('Error updating event:', error);
@@ -649,17 +641,14 @@ async function updateEventAPI(event) {
 
 async function deleteEventAPI(eventId) {
   try {
-    const response = await $fetch(
-      `${apiBase}/delete_event.php`,
-      {
-        method: 'POST',
-        body: JSON.stringify({ id: eventId }),
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      }
-    );
+    const response = await $fetch(`${apiBase}/delete_event.php`, {
+      method: 'POST',
+      body: JSON.stringify({ id: eventId }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
     return response;
   } catch (error) {
     console.error('Error deleting event:', error);
@@ -680,9 +669,14 @@ function getUserInfoFromToken() {
       // Standard JWT format
       const base64Url = parts[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join('')
+      );
       return JSON.parse(jsonPayload);
     } else {
       // Simple base64 encoded JSON (zoals deze app gebruikt)
@@ -760,7 +754,7 @@ async function showNotification(title, options = {}) {
     badge: '/icon-192.png',
     vibrate: [200, 100, 200],
     requireInteraction: false,
-    ...options
+    ...options,
   };
 
   // Gebruik Service Worker voor notificaties (werkt beter op mobiel)
@@ -783,7 +777,7 @@ async function showNotification(title, options = {}) {
 // Setup Pusher voor real-time updates
 async function setupPusher() {
   const userInfo = getUserInfoFromToken();
-  if (!userInfo || !userInfo.user_id && !userInfo.id) {
+  if (!userInfo || (!userInfo.user_id && !userInfo.id)) {
     console.error('❌ Geen user ID gevonden in token');
     return;
   }
@@ -802,7 +796,7 @@ async function setupPusher() {
       enabledTransports: ['ws', 'wss', 'xhr_polling', 'xhr_streaming'],
       disabledTransports: [],
       // Force TLS
-      forceTLS: true
+      forceTLS: true,
     });
 
     console.log('📡 Pusher instance created');
@@ -838,14 +832,14 @@ async function setupPusher() {
       console.log('📅 Nieuw event ontvangen via Pusher:', data);
 
       // Voeg toe aan events array (check of niet al bestaat)
-      const exists = events.value.some(e => e.id === data.id);
+      const exists = events.value.some((e) => e.id === data.id);
       if (!exists) {
         events.value.push(data);
 
         // Toon notificatie
         await showNotification('Nieuwe afspraak', {
           body: `${data.title} op ${data.date} om ${data.time}`,
-          tag: `event-${data.id}`
+          tag: `event-${data.id}`,
         });
       }
     });
@@ -854,14 +848,14 @@ async function setupPusher() {
     channel.bind('event-updated', async (data) => {
       console.log('📝 Event update ontvangen via Pusher:', data);
 
-      const index = events.value.findIndex(e => e.id === data.id);
+      const index = events.value.findIndex((e) => e.id === data.id);
       if (index !== -1) {
         events.value[index] = { ...events.value[index], ...data };
 
         // Toon notificatie
         await showNotification('Afspraak bijgewerkt', {
           body: `${data.title} is bijgewerkt`,
-          tag: `event-${data.id}`
+          tag: `event-${data.id}`,
         });
       }
     });
@@ -870,12 +864,12 @@ async function setupPusher() {
     channel.bind('event-deleted', async (data) => {
       console.log('🗑️ Event verwijderd via Pusher:', data);
 
-      events.value = events.value.filter(e => e.id !== data.id);
+      events.value = events.value.filter((e) => e.id !== data.id);
 
       // Toon notificatie
       await showNotification('Afspraak verwijderd', {
         body: `${data.title} is verwijderd`,
-        tag: `event-${data.id}`
+        tag: `event-${data.id}`,
       });
     });
 
@@ -1572,7 +1566,7 @@ select {
 
 /* Button styles */
 .btn-primary {
-  background-color: #007bff;
+  background-color: #007bff00;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1586,7 +1580,7 @@ select {
 }
 
 .btn-secondary {
-  background-color: #6c757d;
+  background-color: #6c757d00;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1600,7 +1594,7 @@ select {
 }
 
 .btn-logout {
-  background-color: #dc3545;
+  background-color: #dc354600;
   color: white;
   border: none;
   padding: 10px 20px;
