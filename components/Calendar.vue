@@ -776,7 +776,12 @@ async function setupPusher() {
 
     pusherInstance = new Pusher('7e0e61e65d1c3b4cdbdc', {
       cluster: 'eu',
-      encrypted: true
+      encrypted: true,
+      // Enable different transport fallbacks
+      enabledTransports: ['ws', 'wss', 'xhr_polling', 'xhr_streaming'],
+      disabledTransports: [],
+      // Force TLS
+      forceTLS: true
     });
 
     console.log('📡 Pusher instance created');
