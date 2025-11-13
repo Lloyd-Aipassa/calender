@@ -774,7 +774,7 @@ async function setupPusher() {
     // Dynamically import Pusher
     const Pusher = (await import('pusher-js')).default;
 
-    pusherInstance = new Pusher('7e0e61e65d1c3b4cdbdc', {
+    pusherInstance = new Pusher('eca46c4499768c752eed', {
       cluster: 'eu',
       encrypted: true,
       // Enable different transport fallbacks
