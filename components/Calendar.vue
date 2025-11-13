@@ -1,44 +1,14 @@
 <template>
   <div class="calendar-container">
     <div class="calendar-header">
-      <h2>Gedeelde Agenda</h2>
+      <div class="header-left">
+        <h2>Gedeelde Agenda</h2>
+        <p v-if="userName" class="user-name">{{ userName }}</p>
+      </div>
       <div class="header-actions">
-        <button @click="openShareModal" class="btn-secondary">Delen</button>
+        <button @click="goToSettings" class="btn-secondary">⚙️ Instellingen</button>
         <button @click="showAddEvent = true" class="btn-primary">Nieuwe Afspraak</button>
         <button @click="logout" class="btn-logout">Uitloggen</button>
-      </div>
-    </div>
-
-    <!-- Pending Invitations Banner -->
-    <div v-if="pendingInvitations.length > 0" class="invitations-banner">
-      <div class="invitation-header">
-        <h4>📨 Nieuwe uitnodigingen ({{ pendingInvitations.length }})</h4>
-      </div>
-      <div class="invitations-list">
-        <div
-          v-for="invitation in pendingInvitations"
-          :key="invitation.share_id"
-          class="invitation-item">
-          <div class="invitation-info">
-            <strong>{{ invitation.owner_name }}</strong>
-            wil hun agenda met je delen
-            <span class="invitation-permission">
-              ({{ invitation.permission === 'view' ? 'Bekijken' : 'Bekijken en bewerken' }})
-            </span>
-          </div>
-          <div class="invitation-actions">
-            <button
-              @click="respondToInvitation(invitation.share_id, 'accepted')"
-              class="btn-accept">
-              Accepteren
-            </button>
-            <button
-              @click="respondToInvitation(invitation.share_id, 'declined')"
-              class="btn-decline">
-              Weigeren
-            </button>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -213,96 +183,27 @@
       </div>
     </div>
 
-    <!-- Share Calendar Modal -->
-    <div v-if="showShareModal" class="modal-overlay" @click="closeShareModal">
-      <div class="modal" @click.stop>
-        <h3>Agenda Delen</h3>
-
-        <!-- Invite new user -->
-        <div class="share-section">
-          <h4>Iemand uitnodigen</h4>
-          <form @submit.prevent="inviteUser">
-            <div class="form-group">
-              <label>Email adres:</label>
-              <input v-model="shareForm.email" type="email" required placeholder="naam@email.com" />
-            </div>
-            <div class="form-group">
-              <label>Toegang:</label>
-              <select v-model="shareForm.permission">
-                <option value="view">Alleen bekijken</option>
-                <option value="edit">Bekijken en bewerken</option>
-              </select>
-            </div>
-            <button type="submit" class="btn-primary">Uitnodigen</button>
-          </form>
-        </div>
-
-        <!-- Current shares -->
-        <div class="share-section">
-          <h4>Gedeeld met</h4>
-          <div v-if="myShares.length === 0" class="no-shares">Nog niet gedeeld met iemand</div>
-          <div v-for="share in myShares" :key="share.share_id" class="share-item">
-            <div class="share-info">
-              <strong>{{ share.shared_with_name }}</strong>
-              <span class="share-email">{{ share.shared_with_email }}</span>
-              <span class="share-permission">
-                {{ share.permission === 'view' ? 'Bekijken' : 'Bewerken' }}
-              </span>
-              <span class="share-status" :class="share.status">
-                {{ share.status === 'pending' ? 'Uitnodiging verzonden' : 'Geaccepteerd' }}
-              </span>
-            </div>
-            <button @click="removeShare(share.share_id)" class="btn-danger-small">
-              Verwijderen
-            </button>
-          </div>
-        </div>
-
-        <!-- Shared calendars (calendars shared with me) -->
-        <div class="share-section">
-          <h4>Agenda's gedeeld met mij</h4>
-          <div v-if="sharedCalendars.length === 0" class="no-shares">Geen gedeelde agenda's</div>
-          <div v-for="calendar in sharedCalendars" :key="calendar.share_id" class="share-item">
-            <div class="share-info">
-              <strong>{{ calendar.owner_name }}</strong>
-              <span class="share-email">{{ calendar.owner_email }}</span>
-              <span class="share-permission">
-                {{ calendar.permission === 'view' ? 'Bekijken' : 'Bewerken' }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" @click="closeShareModal" class="btn-secondary">Sluiten</button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
+// Get runtime config for API base URL
+const config = useRuntimeConfig();
+const apiBase = config.public.apiBaseUrl;
+
 // State - ALL reactive variables defined first
 const currentDate = ref(new Date());
 const currentView = ref('month');
 const showAddEvent = ref(false);
-const showShareModal = ref(false);
 const editingEvent = ref(null);
 const events = ref([]);
-const sharedCalendars = ref([]);
-const myShares = ref([]);
-const pendingInvitations = ref([]);
+const userName = ref('');
 
 const eventForm = ref({
   title: '',
   date: '',
   time: '',
   description: '',
-});
-
-const shareForm = ref({
-  email: '',
-  permission: 'view',
 });
 
 // Constants
@@ -575,14 +476,8 @@ function closeModal() {
   eventForm.value = { title: '', date: '', time: '', description: '' };
 }
 
-function closeShareModal() {
-  showShareModal.value = false;
-  shareForm.value = { email: '', permission: 'view' };
-}
-
-function openShareModal() {
-  showShareModal.value = true;
-  loadShares(); // Load current shares when opening modal
+function goToSettings() {
+  navigateTo('/settings');
 }
 
 function logout() {
@@ -684,12 +579,15 @@ async function loadEventsAPI() {
   try {
     console.log('Loading events from API...'); // Debug log
 
-    const response = await $fetch('http://localhost/sharedcalender/api/events.php', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
+    const response = await $fetch(
+      `${apiBase}/get_events.php`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      }
+    );
 
     console.log('API Response:', response); // Debug log
     console.log('Events found:', response.events?.length || 0); // Debug log
@@ -706,14 +604,17 @@ async function createEventAPI(event) {
   try {
     console.log('Making API call to create event:', event);
 
-    const response = await $fetch('http://localhost/sharedcalender/api/events.php', {
-      method: 'POST',
-      body: JSON.stringify(event),
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
+    const response = await $fetch(
+      `${apiBase}/create_event.php`,
+      {
+        method: 'POST',
+        body: JSON.stringify(event),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      }
+    );
 
     console.log('Raw API response:', response);
     return response;
@@ -726,14 +627,17 @@ async function createEventAPI(event) {
 
 async function updateEventAPI(event) {
   try {
-    const response = await $fetch(`http://localhost/sharedcalender/api/events.php?id=${event.id}`, {
-      method: 'PUT',
-      body: JSON.stringify(event),
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
+    const response = await $fetch(
+      `${apiBase}/update_event.php`,
+      {
+        method: 'POST',
+        body: JSON.stringify(event),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      }
+    );
     return response;
   } catch (error) {
     console.error('Error updating event:', error);
@@ -743,12 +647,17 @@ async function updateEventAPI(event) {
 
 async function deleteEventAPI(eventId) {
   try {
-    const response = await $fetch(`http://localhost/sharedcalender/api/events.php?id=${eventId}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
+    const response = await $fetch(
+      `${apiBase}/delete_event.php`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ id: eventId }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      }
+    );
     return response;
   } catch (error) {
     console.error('Error deleting event:', error);
@@ -756,136 +665,77 @@ async function deleteEventAPI(eventId) {
   }
 }
 
-// Sharing API functions
-async function inviteUser() {
-  try {
-    const response = await $fetch('http://localhost/sharedcalender/api/participants.php', {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'invite_user',
-        email: shareForm.value.email,
-        permission: shareForm.value.permission,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
+// Decode JWT to get user info
+function getUserInfoFromToken() {
+  const token = getAuthToken();
+  if (!token) return null;
 
-    if (response.success) {
-      alert('Uitnodiging verzonden!');
-      shareForm.value = { email: '', permission: 'view' };
-      loadShares();
+  try {
+    // JWT is in format: header.payload.signature
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.warn('Token does not have 3 parts, might not be a JWT');
+      return null;
     }
-  } catch (error) {
-    console.error('Error inviting user:', error);
-    alert(error.data?.error || 'Fout bij het versturen van uitnodiging');
-  }
-}
 
-async function loadShares() {
-  try {
-    // Load my shares
-    const mySharesResponse = await $fetch(
-      'http://localhost/sharedcalender/api/participants.php?action=my_shares',
-      {
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      }
-    );
-    myShares.value = mySharesResponse.my_shares || [];
-
-    // Load shared calendars
-    const sharedResponse = await $fetch(
-      'http://localhost/sharedcalender/api/participants.php?action=shared_calendars',
-      {
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      }
-    );
-    sharedCalendars.value = sharedResponse.shared_calendars || [];
-  } catch (error) {
-    console.error('Error loading shares:', error);
-  }
-}
-
-async function loadPendingInvitations() {
-  try {
-    const response = await $fetch(
-      'http://localhost/sharedcalender/api/participants.php?action=pending_invitations',
-      {
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      }
-    );
-    pendingInvitations.value = response.pending_invitations || [];
-  } catch (error) {
-    console.error('Error loading pending invitations:', error);
-  }
-}
-
-async function removeShare(shareId) {
-  if (!confirm('Weet je zeker dat je deze deling wilt verwijderen?')) return;
-
-  try {
-    await $fetch(`http://localhost/sharedcalender/api/participants.php?id=${shareId}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
-
-    alert('Deling verwijderd!');
-    loadShares();
-  } catch (error) {
-    console.error('Error removing share:', error);
-    alert('Fout bij het verwijderen van deling');
-  }
-}
-
-async function respondToInvitation(invitationId, response) {
-  try {
-    const result = await $fetch('http://localhost/sharedcalender/api/participants.php', {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'respond_invitation',
-        invitation_id: invitationId,
-        response: response,
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${getAuthToken()}`,
-      },
-    });
-
-    if (result.success) {
-      alert(response === 'accepted' ? 'Uitnodiging geaccepteerd!' : 'Uitnodiging geweigerd!');
-      // Reload data
-      await loadPendingInvitations();
-      await loadShares();
-      await loadEventsAPI(); // Reload events to include shared calendars
+    const base64Url = parts[1];
+    if (!base64Url) {
+      return null;
     }
+
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
   } catch (error) {
-    console.error('Error responding to invitation:', error);
-    alert('Fout bij het verwerken van uitnodiging');
+    console.error('Error decoding token:', error);
+    return null;
   }
 }
 
 // Load events on mount
 onMounted(async () => {
+  // Get user info from API
+  try {
+    const response = await $fetch(`${apiBase}/get_user_info.php`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+    if (response.success && response.user) {
+      userName.value = response.user.name || response.user.email || 'Gebruiker';
+    }
+  } catch (error) {
+    // Silently fail - API not available yet
+    // Fallback: try to decode token
+    const userInfo = getUserInfoFromToken();
+    if (userInfo) {
+      userName.value = userInfo.name || userInfo.email || 'Gebruiker';
+    } else {
+      // Don't show name if we can't get it
+      userName.value = '';
+    }
+  }
+
   try {
     const loadedEvents = await loadEventsAPI();
     events.value = loadedEvents;
-    // Load sharing information
-    await loadShares();
-    // Load pending invitations
-    await loadPendingInvitations();
   } catch (error) {
     console.error('Failed to load events:', error);
   }
+
+  // Auto-refresh events every 30 seconds to detect changes from Google Calendar
+  setInterval(async () => {
+    try {
+      const loadedEvents = await loadEventsAPI();
+      events.value = loadedEvents;
+      console.log('Events auto-refreshed');
+    } catch (error) {
+      console.error('Auto-refresh failed:', error);
+    }
+  }, 30000); // 30 seconds
 });
 </script>
 
@@ -904,9 +754,22 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
 .calendar-header h2 {
   margin: 0;
   color: #333;
+}
+
+.user-name {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .header-actions {

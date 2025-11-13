@@ -22,3 +22,9 @@ logs
 .env
 .env.*
 !.env.example
+
+# Mobile/Capacitor (not used)
+android/
+ios/
+capacitor.config.ts
+capacitor.config.json

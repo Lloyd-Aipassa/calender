@@ -84,13 +84,19 @@ async function handleSubmit() {
 
     console.log('Sending:', payload);
 
-    const response = await $fetch('http://localhost/sharedcalender/api/auth.php', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const config = useRuntimeConfig()
+    const apiBase = config.public.apiBaseUrl || 'https://calender.brooklynwebdesign.nl'
+
+    const response = await $fetch(
+      `${apiBase}/auth.php`,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
     console.log('Response:', response);
 
@@ -99,8 +105,17 @@ async function handleSubmit() {
       localStorage.setItem('authToken', response.token);
       console.log('Token saved:', response.token);
 
-      // Redirect to calendar
-      await navigateTo('/');
+      // Check if there's a redirect URL in query params
+      const route = useRoute();
+      const redirectUrl = route.query.redirect;
+
+      if (redirectUrl) {
+        // Redirect to the specified URL (e.g., accept-invite page)
+        window.location.href = redirectUrl;
+      } else {
+        // Redirect to calendar
+        await navigateTo('/');
+      }
     } else {
       error.value =
         response.error || (isRegister.value ? 'Registratie mislukt' : 'Inloggen mislukt');
