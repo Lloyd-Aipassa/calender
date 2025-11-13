@@ -667,30 +667,31 @@ async function deleteEventAPI(eventId) {
   }
 }
 
-// Decode JWT to get user info
+// Decode token to get user info
 function getUserInfoFromToken() {
   const token = getAuthToken();
   if (!token) return null;
 
   try {
-    // JWT is in format: header.payload.signature
+    // Check if it's a JWT (header.payload.signature)
     const parts = token.split('.');
-    if (parts.length !== 3) {
-      console.warn('Token does not have 3 parts, might not be a JWT');
-      return null;
+
+    if (parts.length === 3) {
+      // Standard JWT format
+      const base64Url = parts[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } else {
+      // Simple base64 encoded JSON (zoals deze app gebruikt)
+      console.log('🔍 Token is base64 encoded JSON (not JWT)');
+      const decoded = atob(token);
+      const userInfo = JSON.parse(decoded);
+      console.log('✅ Decoded user info:', userInfo);
+      return userInfo;
     }
-
-    const base64Url = parts[1];
-    if (!base64Url) {
-      return null;
-    }
-
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-
-    return JSON.parse(jsonPayload);
   } catch (error) {
     console.error('Error decoding token:', error);
     return null;
