@@ -198,6 +198,8 @@ const showAddEvent = ref(false);
 const editingEvent = ref(null);
 const events = ref([]);
 const userName = ref('');
+const notificationsEnabled = ref(false);
+let pusherInstance = null;
 
 const eventForm = ref({
   title: '',
@@ -695,6 +697,129 @@ function getUserInfoFromToken() {
   }
 }
 
+// Register Service Worker voor push notificaties
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) {
+    console.log('Service Worker niet ondersteund');
+    return null;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.register('/sw.js');
+    console.log('Service Worker geregistreerd:', registration);
+    return registration;
+  } catch (error) {
+    console.error('Service Worker registratie mislukt:', error);
+    return null;
+  }
+}
+
+// Vraag notificatie permissies
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    console.log('Browser ondersteunt geen notificaties');
+    return false;
+  }
+
+  if (Notification.permission === 'granted') {
+    notificationsEnabled.value = true;
+    return true;
+  }
+
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    notificationsEnabled.value = permission === 'granted';
+    return permission === 'granted';
+  }
+
+  return false;
+}
+
+// Toon browser notificatie
+function showNotification(title, options = {}) {
+  if (notificationsEnabled.value && 'Notification' in window) {
+    new Notification(title, {
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [200, 100, 200],
+      ...options
+    });
+  }
+}
+
+// Setup Pusher voor real-time updates
+async function setupPusher() {
+  const userInfo = getUserInfoFromToken();
+  if (!userInfo || !userInfo.user_id && !userInfo.id) {
+    console.error('Geen user ID gevonden in token');
+    return;
+  }
+
+  const userId = userInfo.user_id || userInfo.id;
+
+  try {
+    // Dynamically import Pusher
+    const Pusher = (await import('pusher-js')).default;
+
+    pusherInstance = new Pusher('7e0e61e65d1c3b4cdbdc', {
+      cluster: 'eu',
+      encrypted: true
+    });
+
+    const channel = pusherInstance.subscribe(`private-user-${userId}`);
+
+    // Event created
+    channel.bind('event-created', (data) => {
+      console.log('📅 Nieuw event ontvangen via Pusher:', data);
+
+      // Voeg toe aan events array (check of niet al bestaat)
+      const exists = events.value.some(e => e.id === data.id);
+      if (!exists) {
+        events.value.push(data);
+
+        // Toon notificatie
+        showNotification('Nieuwe afspraak', {
+          body: `${data.title} op ${data.date} om ${data.time}`,
+          tag: `event-${data.id}`
+        });
+      }
+    });
+
+    // Event updated
+    channel.bind('event-updated', (data) => {
+      console.log('📝 Event update ontvangen via Pusher:', data);
+
+      const index = events.value.findIndex(e => e.id === data.id);
+      if (index !== -1) {
+        events.value[index] = { ...events.value[index], ...data };
+
+        // Toon notificatie
+        showNotification('Afspraak bijgewerkt', {
+          body: `${data.title} is bijgewerkt`,
+          tag: `event-${data.id}`
+        });
+      }
+    });
+
+    // Event deleted
+    channel.bind('event-deleted', (data) => {
+      console.log('🗑️ Event verwijderd via Pusher:', data);
+
+      events.value = events.value.filter(e => e.id !== data.id);
+
+      // Toon notificatie
+      showNotification('Afspraak verwijderd', {
+        body: `${data.title} is verwijderd`,
+        tag: `event-${data.id}`
+      });
+    });
+
+    console.log('✅ Pusher connected voor user:', userId);
+  } catch (error) {
+    console.error('Pusher setup error:', error);
+  }
+}
+
 // Load events on mount
 onMounted(async () => {
   // Get user info from API
@@ -726,7 +851,17 @@ onMounted(async () => {
     console.error('Failed to load events:', error);
   }
 
+  // Register Service Worker voor push notificaties
+  await registerServiceWorker();
+
+  // Vraag notificatie permissies
+  await requestNotificationPermission();
+
+  // Setup Pusher voor real-time updates
+  await setupPusher();
+
   // Auto-refresh events every 30 seconds to detect changes from Google Calendar
+  // (dit is nu minder nodig door Pusher, maar houden voor extra zekerheid)
   setInterval(async () => {
     try {
       const loadedEvents = await loadEventsAPI();
