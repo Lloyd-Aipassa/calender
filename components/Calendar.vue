@@ -717,33 +717,44 @@ async function registerServiceWorker() {
 // Vraag notificatie permissies
 async function requestNotificationPermission() {
   if (!('Notification' in window)) {
-    console.log('Browser ondersteunt geen notificaties');
+    console.log('❌ Browser ondersteunt geen notificaties');
     return false;
   }
 
+  console.log('🔔 Huidige notification permission:', Notification.permission);
+
   if (Notification.permission === 'granted') {
     notificationsEnabled.value = true;
+    console.log('✅ Notificaties al toegestaan');
     return true;
   }
 
   if (Notification.permission !== 'denied') {
+    console.log('📝 Vraag notification permission...');
     const permission = await Notification.requestPermission();
     notificationsEnabled.value = permission === 'granted';
+    console.log('🔔 Permission result:', permission);
     return permission === 'granted';
   }
 
+  console.log('❌ Notificaties geweigerd door gebruiker');
   return false;
 }
 
 // Toon browser notificatie
 function showNotification(title, options = {}) {
+  console.log('🔔 showNotification called:', title, 'enabled:', notificationsEnabled.value);
+
   if (notificationsEnabled.value && 'Notification' in window) {
+    console.log('✅ Toon notificatie:', title);
     new Notification(title, {
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       vibrate: [200, 100, 200],
       ...options
     });
+  } else {
+    console.log('❌ Notificaties niet enabled of niet ondersteund');
   }
 }
 
@@ -751,11 +762,12 @@ function showNotification(title, options = {}) {
 async function setupPusher() {
   const userInfo = getUserInfoFromToken();
   if (!userInfo || !userInfo.user_id && !userInfo.id) {
-    console.error('Geen user ID gevonden in token');
+    console.error('❌ Geen user ID gevonden in token');
     return;
   }
 
   const userId = userInfo.user_id || userInfo.id;
+  console.log('🔧 Setting up Pusher voor user ID:', userId);
 
   try {
     // Dynamically import Pusher
@@ -766,7 +778,33 @@ async function setupPusher() {
       encrypted: true
     });
 
-    const channel = pusherInstance.subscribe(`private-user-${userId}`);
+    console.log('📡 Pusher instance created');
+
+    // Debug: connection state
+    pusherInstance.connection.bind('state_change', (states) => {
+      console.log('Pusher state change:', states.previous, '->', states.current);
+    });
+
+    pusherInstance.connection.bind('connected', () => {
+      console.log('✅ Pusher connected!');
+    });
+
+    pusherInstance.connection.bind('error', (err) => {
+      console.error('❌ Pusher connection error:', err);
+    });
+
+    // Gebruik public channel (geen auth nodig)
+    const channelName = `user-${userId}`;
+    console.log('📺 Subscribing to channel:', channelName);
+    const channel = pusherInstance.subscribe(channelName);
+
+    channel.bind('pusher:subscription_succeeded', () => {
+      console.log('✅ Successfully subscribed to', channelName);
+    });
+
+    channel.bind('pusher:subscription_error', (err) => {
+      console.error('❌ Subscription error:', err);
+    });
 
     // Event created
     channel.bind('event-created', (data) => {
