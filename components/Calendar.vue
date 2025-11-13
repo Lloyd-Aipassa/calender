@@ -698,6 +698,9 @@ function getUserInfoFromToken() {
   }
 }
 
+// Service Worker registration reference
+let swRegistration = null;
+
 // Register Service Worker voor push notificaties
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) {
@@ -708,6 +711,7 @@ async function registerServiceWorker() {
   try {
     const registration = await navigator.serviceWorker.register('/sw.js');
     console.log('Service Worker geregistreerd:', registration);
+    swRegistration = registration;
     return registration;
   } catch (error) {
     console.error('Service Worker registratie mislukt:', error);
@@ -742,20 +746,37 @@ async function requestNotificationPermission() {
   return false;
 }
 
-// Toon browser notificatie
-function showNotification(title, options = {}) {
+// Toon browser notificatie (werkt op zowel desktop als mobiel)
+async function showNotification(title, options = {}) {
   console.log('🔔 showNotification called:', title, 'enabled:', notificationsEnabled.value);
 
-  if (notificationsEnabled.value && 'Notification' in window) {
-    console.log('✅ Toon notificatie:', title);
-    new Notification(title, {
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      vibrate: [200, 100, 200],
-      ...options
-    });
-  } else {
+  if (!notificationsEnabled.value || !('Notification' in window)) {
     console.log('❌ Notificaties niet enabled of niet ondersteund');
+    return;
+  }
+
+  const notificationOptions = {
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
+    ...options
+  };
+
+  // Gebruik Service Worker voor notificaties (werkt beter op mobiel)
+  if (swRegistration && swRegistration.showNotification) {
+    console.log('✅ Toon notificatie via Service Worker:', title);
+    try {
+      await swRegistration.showNotification(title, notificationOptions);
+    } catch (error) {
+      console.error('Service Worker notification failed:', error);
+      // Fallback naar normale notificatie
+      new Notification(title, notificationOptions);
+    }
+  } else {
+    // Fallback voor desktop browsers
+    console.log('✅ Toon notificatie direct:', title);
+    new Notification(title, notificationOptions);
   }
 }
 
@@ -813,7 +834,7 @@ async function setupPusher() {
     });
 
     // Event created
-    channel.bind('event-created', (data) => {
+    channel.bind('event-created', async (data) => {
       console.log('📅 Nieuw event ontvangen via Pusher:', data);
 
       // Voeg toe aan events array (check of niet al bestaat)
@@ -822,7 +843,7 @@ async function setupPusher() {
         events.value.push(data);
 
         // Toon notificatie
-        showNotification('Nieuwe afspraak', {
+        await showNotification('Nieuwe afspraak', {
           body: `${data.title} op ${data.date} om ${data.time}`,
           tag: `event-${data.id}`
         });
@@ -830,7 +851,7 @@ async function setupPusher() {
     });
 
     // Event updated
-    channel.bind('event-updated', (data) => {
+    channel.bind('event-updated', async (data) => {
       console.log('📝 Event update ontvangen via Pusher:', data);
 
       const index = events.value.findIndex(e => e.id === data.id);
@@ -838,7 +859,7 @@ async function setupPusher() {
         events.value[index] = { ...events.value[index], ...data };
 
         // Toon notificatie
-        showNotification('Afspraak bijgewerkt', {
+        await showNotification('Afspraak bijgewerkt', {
           body: `${data.title} is bijgewerkt`,
           tag: `event-${data.id}`
         });
@@ -846,13 +867,13 @@ async function setupPusher() {
     });
 
     // Event deleted
-    channel.bind('event-deleted', (data) => {
+    channel.bind('event-deleted', async (data) => {
       console.log('🗑️ Event verwijderd via Pusher:', data);
 
       events.value = events.value.filter(e => e.id !== data.id);
 
       // Toon notificatie
-      showNotification('Afspraak verwijderd', {
+      await showNotification('Afspraak verwijderd', {
         body: `${data.title} is verwijderd`,
         tag: `event-${data.id}`
       });
