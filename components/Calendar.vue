@@ -959,6 +959,10 @@ onMounted(async () => {
   margin: 0;
   color: #333;
 }
+.calendar-header button {
+  padding: 5px;
+  background: #15572400;
+}
 
 .calendar-content {
   box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
