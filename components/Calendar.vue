@@ -1324,7 +1324,11 @@ select {
 }
 
 .calendar-day.today {
-  background-color: #ffe5e5;
+  background-color: white;
+}
+
+.calendar-day.today .day-number {
+  color: #fa0101;
 }
 
 .calendar-day.weekend {
@@ -1449,7 +1453,7 @@ select {
 
 .day-date.today {
   color: #fa0101;
-  background: #ffe5e5;
+  background: white;
   border-radius: 50%;
   width: 30px;
   height: 30px;
