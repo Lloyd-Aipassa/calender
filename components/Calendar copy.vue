@@ -419,12 +419,15 @@ function nextPeriod() {
 }
 
 function selectDate(day) {
-  // Parse the date string to set currentDate
-  const [year, month, dayNum] = day.date.split('-').map(Number);
-  currentDate.value = new Date(year, month - 1, dayNum);
-
-  // Switch to day view
-  currentView.value = 'day';
+  // Use the day.date directly instead of parsing it again
+  eventForm.value = {
+    title: '',
+    date: day.date, // This is already in YYYY-MM-DD format
+    time: '09:00',
+    description: '',
+  };
+  editingEvent.value = null;
+  showAddEvent.value = true;
 }
 
 function selectTimeSlot(date, hour) {
@@ -1225,7 +1228,7 @@ select {
 
 /* Month View */
 .calendar-grid {
-  /* border: 1px solid #ddd; */
+  border: 1px solid #ddd;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -1233,7 +1236,7 @@ select {
 .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  background: white;
+  background: #f8f9fa;
 }
 
 .weekday {
@@ -1241,7 +1244,7 @@ select {
   text-align: center;
   font-weight: 600;
   color: #666;
-  /* border-right: 1px solid #ddd; */
+  border-right: 1px solid #ddd;
 }
 
 .weekday:last-child {
@@ -1255,16 +1258,13 @@ select {
 
 .calendar-day {
   min-height: 120px;
-  max-height: 120px;
-  /* border-right: 1px solid #eee;
-  border-bottom: 1px solid #eee; */
+  border-right: 1px solid #eee;
+  border-bottom: 1px solid #eee;
   padding: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
   display: flex;
   flex-direction: column;
-  background-color: white;
-  overflow: hidden;
 }
 
 .calendar-day:hover {
@@ -1276,7 +1276,7 @@ select {
 }
 
 .calendar-day.other-month {
-  background-color: white;
+  background-color: #f9f9f9;
   color: #ccc;
 }
 
@@ -1289,7 +1289,7 @@ select {
 }
 
 .calendar-day.weekend {
-  background-color: white;
+  background-color: #fafafa;
 }
 
 .day-number {
@@ -1576,7 +1576,7 @@ select {
 
 /* Button styles */
 .btn-primary {
-  background-color: #007bffa0;
+  background-color: #007bff00;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1590,7 +1590,7 @@ select {
 }
 
 .btn-secondary {
-  background-color: #6c757d47;
+  background-color: #6c757d00;
   color: white;
   border: none;
   padding: 10px 20px;
