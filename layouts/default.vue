@@ -50,6 +50,13 @@ body {
   flex: 1;
 }
 
+/* Mobile bottom navigation */
+@media (max-width: 768px) {
+  .main-content {
+    padding-bottom: 80px;
+  }
+}
+
 /* PWA Standalone Mode Styling */
 @media all and (display-mode: standalone) {
   .nav-header {
@@ -68,6 +75,12 @@ body {
 
   .main-content {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@media all and (display-mode: standalone) and (max-width: 768px) {
+  .main-content {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 }
 </style>

@@ -146,28 +146,49 @@ function logout() {
 }
 
 @media (max-width: 768px) {
+  .nav-header {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    border-bottom: none;
+    border-top: 1px solid #e0e0e0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+  }
+
   .nav-container {
-    flex-wrap: wrap;
-    height: auto;
-    padding: 12px 20px;
+    height: 64px;
+    padding: 0 10px;
+    flex-wrap: nowrap;
   }
 
   .nav-brand {
-    width: 100%;
-    margin-bottom: 12px;
+    display: none;
   }
 
   .nav-links {
     flex: 1;
+    justify-content: space-around;
+    gap: 0;
   }
 
   .nav-link {
-    padding: 6px 12px;
-    font-size: 14px;
+    flex-direction: column;
+    padding: 8px 12px;
+    font-size: 12px;
+    gap: 4px;
+    flex: 1;
+    text-align: center;
   }
 
   .nav-icon {
-    font-size: 16px;
+    font-size: 20px;
+  }
+
+  .nav-user {
+    display: none;
   }
 
   .user-name {
