@@ -964,6 +964,8 @@ onMounted(async () => {
   box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
   box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   border-radius: 15px;
+  padding: 15px;
+  background-color: #fff;
 }
 
 .user-name {
@@ -980,17 +982,17 @@ onMounted(async () => {
 
 /* Invitations Banner */
 .invitations-banner {
-  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-  border: 1px solid #2196f3;
+  background: linear-gradient(135deg, #ffe5e5, #ffcccc);
+  border: 1px solid #fa0101;
   border-radius: 8px;
   padding: 15px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.1);
+  box-shadow: 0 2px 4px rgba(250, 1, 1, 0.1);
 }
 
 .invitation-header h4 {
   margin: 0 0 10px 0;
-  color: #1976d2;
+  color: #fa0101;
   font-size: 16px;
 }
 
@@ -1098,8 +1100,8 @@ onMounted(async () => {
 .share-permission {
   font-size: 12px;
   padding: 2px 6px;
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #ffe5e5;
+  color: #fa0101;
   border-radius: 12px;
   display: inline-block;
   width: fit-content;
@@ -1192,13 +1194,13 @@ select {
 }
 
 .view-btn.active {
-  background: #007bff;
+  background: #fa0101;
   color: white;
-  border-color: #007bff;
+  border-color: #fa0101;
 }
 
 .nav-btn {
-  background: #007bff;
+  background: #fa0101;
   color: white;
   border: none;
   width: 40px;
@@ -1212,7 +1214,7 @@ select {
 }
 
 .nav-btn:hover {
-  background: #0056b3;
+  background: #c80101;
 }
 
 .calendar-nav h3 {
@@ -1285,7 +1287,7 @@ select {
 }
 
 .calendar-day.today {
-  background-color: #e3f2fd;
+  background-color: #ffe5e5;
 }
 
 .calendar-day.weekend {
@@ -1306,7 +1308,7 @@ select {
 }
 
 .event {
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background: linear-gradient(135deg, #fa0101, #c80101);
   color: white;
   padding: 2px 6px;
   border-radius: 3px;
@@ -1322,7 +1324,7 @@ select {
 }
 
 .event:hover {
-  background: linear-gradient(135deg, #0056b3, #004085);
+  background: linear-gradient(135deg, #c80101, #a00101);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -1409,8 +1411,8 @@ select {
 }
 
 .day-date.today {
-  color: #007bff;
-  background: #e3f2fd;
+  color: #fa0101;
+  background: #ffe5e5;
   border-radius: 50%;
   width: 30px;
   height: 30px;
@@ -1456,7 +1458,7 @@ select {
 }
 
 .week-event {
-  background: #007bff;
+  background: #fa0101;
   color: white;
   padding: 2px 6px;
   border-radius: 3px;
@@ -1466,7 +1468,7 @@ select {
 }
 
 .week-event:hover {
-  background: #0056b3;
+  background: #c80101;
 }
 
 .week-event.shared-event {
@@ -1528,7 +1530,7 @@ select {
 }
 
 .day-event {
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background: linear-gradient(135deg, #fa0101, #c80101);
   color: white;
   padding: 8px 12px;
   border-radius: 6px;
@@ -1576,7 +1578,7 @@ select {
 
 /* Button styles */
 .btn-primary {
-  background-color: #007bffa0;
+  background-color: #fa0101a0;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1586,7 +1588,7 @@ select {
 }
 
 .btn-primary:hover {
-  background-color: #0056b3;
+  background-color: #c80101;
 }
 
 .btn-secondary {
@@ -1680,7 +1682,7 @@ select {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: #fa0101;
 }
 
 .modal-actions {

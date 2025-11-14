@@ -106,7 +106,7 @@ function logout() {
 }
 
 .nav-link.active {
-  background: #4caf50;
+  background: #fa0101;
   color: white;
 }
 
