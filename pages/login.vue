@@ -105,6 +105,9 @@ async function handleSubmit() {
       localStorage.setItem('authToken', response.token);
       console.log('Token saved:', response.token);
 
+      // Small delay to ensure token is saved before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Check if there's a redirect URL in query params
       const route = useRoute();
       const redirectUrl = route.query.redirect;

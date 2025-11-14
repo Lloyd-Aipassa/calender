@@ -935,15 +935,35 @@ onMounted(async () => {
 
   // Auto-refresh events every 30 seconds to detect changes from Google Calendar
   // (dit is nu minder nodig door Pusher, maar houden voor extra zekerheid)
-  setInterval(async () => {
+  const refreshInterval = setInterval(async () => {
+    // Check if still authenticated before refreshing
+    const currentToken = getAuthToken();
+    if (!currentToken) {
+      console.log('No token found, stopping auto-refresh');
+      clearInterval(refreshInterval);
+      return;
+    }
+
     try {
       const loadedEvents = await loadEventsAPI();
       events.value = loadedEvents;
       console.log('Events auto-refreshed');
     } catch (error) {
       console.error('Auto-refresh failed:', error);
+      // If 401 error, stop the interval
+      if (error.statusCode === 401) {
+        console.log('Unauthorized, stopping auto-refresh');
+        clearInterval(refreshInterval);
+      }
     }
   }, 30000); // 30 seconds
+});
+
+// Cleanup interval on unmount
+onUnmounted(() => {
+  if (pusherInstance) {
+    pusherInstance.disconnect();
+  }
 });
 </script>
 
