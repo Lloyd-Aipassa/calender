@@ -882,11 +882,25 @@ async function setupPusher() {
 
 // Load events on mount
 onMounted(async () => {
+  // Check if user is authenticated before loading
+  const token = getAuthToken();
+  if (!token) {
+    console.log('❌ No auth token found, skipping calendar initialization');
+    return;
+  }
+
+  // Validate token has user info
+  const userInfo = getUserInfoFromToken();
+  if (!userInfo || (!userInfo.user_id && !userInfo.id)) {
+    console.log('❌ Invalid token, skipping calendar initialization');
+    return;
+  }
+
   // Get user info from API
   try {
     const response = await $fetch(`${apiBase}/get_user_info.php`, {
       headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     if (response.success && response.user) {
@@ -895,7 +909,6 @@ onMounted(async () => {
   } catch (error) {
     // Silently fail - API not available yet
     // Fallback: try to decode token
-    const userInfo = getUserInfoFromToken();
     if (userInfo) {
       userName.value = userInfo.name || userInfo.email || 'Gebruiker';
     } else {
