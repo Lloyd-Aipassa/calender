@@ -6,9 +6,11 @@
 </template>
 
 <script setup>
+import Calendar from '~/components/Calendar.vue';
+
 const isAuthenticated = ref(false);
 
-// Check auth BEFORE mounting Calendar component
+// Check auth BEFORE mounting components
 onBeforeMount(() => {
   const token = localStorage.getItem('authToken');
   if (!token) {
@@ -17,7 +19,7 @@ onBeforeMount(() => {
     return;
   }
 
-  // Token exists, allow Calendar to mount
+  // Token exists, allow components to mount
   isAuthenticated.value = true;
 });
 
