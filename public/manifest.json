@@ -1,11 +1,11 @@
 {
-  "name": "Calendar App",
-  "short_name": "Calendar",
-  "description": "Agenda, Chat en Taken beheer applicatie",
+  "name": "Gedeelde Kalender",
+  "short_name": "Kalender",
+  "description": "Gedeelde agenda met real-time synchronisatie",
   "start_url": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#ffffff",
-  "theme_color": "#4caf50",
+  "theme_color": "#fa0101",
   "orientation": "portrait",
   "icons": [
     {
