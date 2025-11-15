@@ -2,9 +2,14 @@
   <div class="tasks-container">
     <div class="tasks-header">
       <h2>Taken</h2>
-      <button @click="showAddTask = true" class="btn-primary">
-        <span>+</span> Nieuwe Taak
-      </button>
+      <div class="header-actions">
+        <button @click="showShareModal = true" class="btn-share">
+          👥 Delen
+        </button>
+        <button @click="showAddTask = true" class="btn-primary">
+          <span>+</span> Nieuwe Taak
+        </button>
+      </div>
     </div>
 
     <!-- Filter knoppen -->
@@ -74,6 +79,70 @@
       </div>
     </div>
 
+    <!-- Share Modal -->
+    <div v-if="showShareModal" class="modal-overlay" @click="closeShareModal">
+      <div class="modal modal-large" @click.stop>
+        <h3>Taken Delen</h3>
+
+        <!-- Invite form -->
+        <div class="share-section">
+          <h4>Persoon uitnodigen</h4>
+          <form @submit.prevent="sendInvite" class="invite-form">
+            <input
+              v-model="inviteForm.email"
+              type="email"
+              placeholder="Email adres"
+              required
+              class="invite-email" />
+            <select v-model="inviteForm.permission_level" class="invite-permission">
+              <option value="view">Alleen bekijken</option>
+              <option value="edit">Bekijken en bewerken</option>
+            </select>
+            <button type="submit" class="btn-primary">Uitnodigen</button>
+          </form>
+        </div>
+
+        <!-- Shared with (people who have access) -->
+        <div v-if="sharedByMe.length > 0" class="share-section">
+          <h4>Gedeeld met</h4>
+          <div class="shared-list">
+            <div v-for="share in sharedByMe" :key="share.id" class="shared-item">
+              <div class="shared-info">
+                <div class="shared-name">{{ share.shared_with_name }}</div>
+                <div class="shared-email">{{ share.shared_with_email }}</div>
+                <div class="shared-permission">
+                  {{ share.permission_level === 'edit' ? '✏️ Kan bewerken' : '👁️ Kan alleen bekijken' }}
+                </div>
+              </div>
+              <button @click="revokeAccess(share.shared_with_user_id)" class="btn-revoke">
+                Intrekken
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending invites -->
+        <div v-if="sentInvites.filter(i => i.status === 'pending').length > 0" class="share-section">
+          <h4>Uitnodigingen verstuurd</h4>
+          <div class="shared-list">
+            <div v-for="invite in sentInvites.filter(i => i.status === 'pending')" :key="invite.id" class="shared-item">
+              <div class="shared-info">
+                <div class="shared-email">{{ invite.invited_email }}</div>
+                <div class="shared-permission">
+                  {{ invite.permission_level === 'edit' ? '✏️ Kan bewerken' : '👁️ Kan alleen bekijken' }}
+                </div>
+                <div class="shared-status">⏳ Wacht op acceptatie</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" @click="closeShareModal" class="btn-secondary">Sluiten</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Add/Edit Modal -->
     <div v-if="showAddTask" class="modal-overlay" @click="closeModal">
       <div class="modal" @click.stop>
@@ -126,12 +195,20 @@ const tasks = ref([]);
 const showAddTask = ref(false);
 const editingTask = ref(null);
 const filter = ref('all');
+const showShareModal = ref(false);
+const sharedByMe = ref([]);
+const sentInvites = ref([]);
 
 const taskForm = ref({
   title: '',
   description: '',
   priority: 'medium',
   due_date: '',
+});
+
+const inviteForm = ref({
+  email: '',
+  permission_level: 'view',
 });
 
 // Helper functions
@@ -308,6 +385,70 @@ function closeModal() {
   };
 }
 
+async function loadSharingInfo() {
+  try {
+    const response = await $fetch(`${apiBase}/get_task_invites.php`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (response.success) {
+      sharedByMe.value = response.shared_by_me || [];
+      sentInvites.value = response.sent_invites || [];
+    }
+  } catch (error) {
+    console.error('Error loading sharing info:', error);
+  }
+}
+
+async function sendInvite() {
+  try {
+    const response = await $fetch(`${apiBase}/send_task_invite.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: JSON.stringify(inviteForm.value),
+    });
+
+    if (response.success) {
+      alert('Uitnodiging verstuurd!');
+      inviteForm.value.email = '';
+      inviteForm.value.permission_level = 'view';
+      await loadSharingInfo();
+    }
+  } catch (error) {
+    console.error('Error sending invite:', error);
+    alert(error.data?.error || 'Fout bij versturen uitnodiging');
+  }
+}
+
+async function revokeAccess(userId) {
+  if (confirm('Weet je zeker dat je de toegang wilt intrekken?')) {
+    try {
+      await $fetch(`${apiBase}/revoke_task_access.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+        body: JSON.stringify({ shared_with_user_id: userId }),
+      });
+
+      await loadSharingInfo();
+    } catch (error) {
+      console.error('Error revoking access:', error);
+      alert('Fout bij intrekken toegang');
+    }
+  }
+}
+
+function closeShareModal() {
+  showShareModal.value = false;
+}
+
 // Auth check and load on mount
 onBeforeMount(() => {
   const token = getAuthToken();
@@ -320,6 +461,7 @@ onMounted(() => {
   const token = getAuthToken();
   if (token) {
     loadTasks();
+    loadSharingInfo();
   }
 });
 </script>
@@ -341,6 +483,29 @@ onMounted(() => {
 .tasks-header h2 {
   margin: 0;
   color: #333;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-share {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.btn-share:hover {
+  background-color: #5a6268;
 }
 
 .filter-section {
@@ -546,6 +711,12 @@ onMounted(() => {
   width: 90%;
   max-width: 500px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-large {
+  max-width: 700px;
 }
 
 .modal h3 {
@@ -588,9 +759,121 @@ onMounted(() => {
   margin-top: 20px;
 }
 
+.share-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.share-section:last-of-type {
+  border-bottom: none;
+}
+
+.share-section h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.invite-form {
+  display: flex;
+  gap: 10px;
+}
+
+.invite-email {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.invite-permission {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  min-width: 150px;
+}
+
+.shared-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shared-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.shared-info {
+  flex: 1;
+}
+
+.shared-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.shared-email {
+  color: #666;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.shared-permission {
+  font-size: 12px;
+  color: #666;
+}
+
+.shared-status {
+  font-size: 12px;
+  color: #ffa500;
+  margin-top: 4px;
+}
+
+.btn-revoke {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.2s;
+}
+
+.btn-revoke:hover {
+  background-color: #c82333;
+}
+
 @media (max-width: 768px) {
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .invite-form {
+    flex-direction: column;
+  }
+
+  .invite-permission {
+    min-width: auto;
+  }
+
+  .shared-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
   }
 }
 </style>
