@@ -39,9 +39,12 @@ onMounted(async () => {
   const token = localStorage.getItem('authToken');
   if (token) {
     try {
-      const response = await $fetch('https://calender.brooklynwebdesign.nl/api/endpoints/get_user_info.php', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await $fetch(
+        'https://calender.brooklynwebdesign.nl/api/endpoints/get_user_info.php',
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       userName.value = response.user.name;
     } catch (error) {
       console.error('Failed to get user info:', error);
@@ -59,7 +62,7 @@ function logout() {
 .nav-header {
   background: white;
   border-bottom: 1px solid #e0e0e0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -193,6 +196,15 @@ function logout() {
 
   .user-name {
     display: none;
+  }
+
+  .nav-link.active {
+    background: #fa010100;
+    color: #fa0101;
+  }
+
+  .nav-link.active:hover {
+    background: #fa010100;
   }
 }
 </style>
