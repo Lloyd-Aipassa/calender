@@ -176,6 +176,19 @@
             <label>Beschrijving:</label>
             <textarea v-model="eventForm.description" rows="3"></textarea>
           </div>
+          <div class="form-group">
+            <label>Herinnering:</label>
+            <select v-model="eventForm.reminder_minutes">
+              <option :value="null">Geen herinnering</option>
+              <option :value="0">Op het moment van het event</option>
+              <option :value="15">15 minuten van tevoren</option>
+              <option :value="30">30 minuten van tevoren</option>
+              <option :value="60">1 uur van tevoren</option>
+              <option :value="1440">1 dag van tevoren</option>
+              <option :value="2880">2 dagen van tevoren</option>
+              <option :value="10080">1 week van tevoren</option>
+            </select>
+          </div>
           <div class="modal-actions">
             <button v-if="editingEvent" type="button" @click="deleteEvent" class="btn-danger">
               Verwijderen
@@ -211,6 +224,7 @@ const eventForm = ref({
   date: '',
   time: '',
   description: '',
+  reminder_minutes: null,
 });
 
 // Constants
@@ -477,7 +491,7 @@ function getEventsForDayHour(date, hour) {
 function closeModal() {
   showAddEvent.value = false;
   editingEvent.value = null;
-  eventForm.value = { title: '', date: '', time: '', description: '' };
+  eventForm.value = { title: '', date: '', time: '', description: '', reminder_minutes: null };
 }
 
 function goToSettings() {
