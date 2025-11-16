@@ -142,13 +142,36 @@ async function requestNotificationPermission() {
 }
 
 // Show browser notification
-function showNotification(messageData) {
+async function showNotification(messageData) {
   // Alleen tonen als window niet in focus is
   if (document.hasFocus()) {
     return;
   }
 
   if ('Notification' in window && Notification.permission === 'granted') {
+    // Probeer eerst via Service Worker (werkt beter op mobiel)
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(`Nieuw bericht van ${messageData.sender_name}`, {
+          body: messageData.message,
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: `chat-${messageData.conversation_id}`,
+          requireInteraction: false,
+          vibrate: [200, 100, 200],
+          data: {
+            url: '/chat',
+            conversation_id: messageData.conversation_id
+          }
+        });
+        return;
+      } catch (error) {
+        console.log('Service Worker notification failed, falling back to regular notification:', error);
+      }
+    }
+
+    // Fallback: gewone notificatie (desktop)
     const notification = new Notification(`Nieuw bericht van ${messageData.sender_name}`, {
       body: messageData.message,
       icon: '/icon-192.png',
