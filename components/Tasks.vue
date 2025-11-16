@@ -43,7 +43,7 @@
           <div v-if="task.description" class="task-description">{{ task.description }}</div>
           <div class="task-meta">
             <span v-if="task.due_date" class="task-due-date">
-              📅 {{ formatDate(task.due_date) }}
+              <img src="/svg/calendar.svg" alt=""> {{ formatDate(task.due_date) }}
             </span>
             <span :class="['task-priority', `priority-${task.priority}`]">
               {{ priorityLabel(task.priority) }}
@@ -59,7 +59,7 @@
           @click="confirmDelete(task)"
           class="btn-delete"
           title="Verwijderen">
-          🗑️
+           <img src="/svg/calendar.svg" alt=""> {{ formatDate(task.due_date) }}
         </button>
       </div>
     </div>

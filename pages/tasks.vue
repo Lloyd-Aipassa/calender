@@ -3,11 +3,10 @@
     <div class="tasks-header">
       <h2>Taken</h2>
       <div class="header-actions">
-        <button @click="showShareModal = true" class="btn-share">
-          👥 Delen
-        </button>
+        <button @click="showShareModal = true" class="btn-share">👥 Delen</button>
         <button @click="showAddTask = true" class="btn-primary">
-          <span>+</span> Nieuwe Taak
+          <span>+</span>
+          Nieuwe Taak
         </button>
       </div>
     </div>
@@ -21,7 +20,9 @@
         <button @click="filter = 'active'" :class="['filter-btn', { active: filter === 'active' }]">
           Actief ({{ activeTasks.length }})
         </button>
-        <button @click="filter = 'completed'" :class="['filter-btn', { active: filter === 'completed' }]">
+        <button
+          @click="filter = 'completed'"
+          :class="['filter-btn', { active: filter === 'completed' }]">
           Voltooid ({{ completedTasks.length }})
         </button>
       </div>
@@ -58,7 +59,8 @@
           <div v-if="task.description" class="task-description">{{ task.description }}</div>
           <div class="task-meta">
             <span v-if="task.due_date" class="task-due-date">
-              📅 {{ formatDate(task.due_date) }}
+              <img src="/svg/calendar.svg" width="15" alt="" />
+              {{ formatDate(task.due_date) }}
             </span>
             <span :class="['task-priority', `priority-${task.priority}`]">
               {{ priorityLabel(task.priority) }}
@@ -74,7 +76,7 @@
           @click="confirmDelete(task)"
           class="btn-delete"
           title="Verwijderen">
-          🗑️
+          <img src="/svg/trash.svg" width="15" alt="" />
         </button>
       </div>
     </div>
@@ -111,7 +113,9 @@
                 <div class="shared-name">{{ share.shared_with_name }}</div>
                 <div class="shared-email">{{ share.shared_with_email }}</div>
                 <div class="shared-permission">
-                  {{ share.permission_level === 'edit' ? '✏️ Kan bewerken' : '👁️ Kan alleen bekijken' }}
+                  {{
+                    share.permission_level === 'edit' ? '✏️ Kan bewerken' : '👁️ Kan alleen bekijken'
+                  }}
                 </div>
               </div>
               <button @click="revokeAccess(share.shared_with_user_id)" class="btn-revoke">
@@ -122,14 +126,23 @@
         </div>
 
         <!-- Pending invites -->
-        <div v-if="sentInvites.filter(i => i.status === 'pending').length > 0" class="share-section">
+        <div
+          v-if="sentInvites.filter((i) => i.status === 'pending').length > 0"
+          class="share-section">
           <h4>Uitnodigingen verstuurd</h4>
           <div class="shared-list">
-            <div v-for="invite in sentInvites.filter(i => i.status === 'pending')" :key="invite.id" class="shared-item">
+            <div
+              v-for="invite in sentInvites.filter((i) => i.status === 'pending')"
+              :key="invite.id"
+              class="shared-item">
               <div class="shared-info">
                 <div class="shared-email">{{ invite.invited_email }}</div>
                 <div class="shared-permission">
-                  {{ invite.permission_level === 'edit' ? '✏️ Kan bewerken' : '👁️ Kan alleen bekijken' }}
+                  {{
+                    invite.permission_level === 'edit'
+                      ? '✏️ Kan bewerken'
+                      : '👁️ Kan alleen bekijken'
+                  }}
                 </div>
                 <div class="shared-status">⏳ Wacht op acceptatie</div>
               </div>
@@ -150,12 +163,19 @@
         <form @submit.prevent="saveTask">
           <div class="form-group">
             <label>Titel:</label>
-            <input v-model="taskForm.title" type="text" required placeholder="Bijv. Boodschappen doen" />
+            <input
+              v-model="taskForm.title"
+              type="text"
+              required
+              placeholder="Bijv. Boodschappen doen" />
           </div>
 
           <div class="form-group">
             <label>Beschrijving:</label>
-            <textarea v-model="taskForm.description" rows="3" placeholder="Optionele beschrijving"></textarea>
+            <textarea
+              v-model="taskForm.description"
+              rows="3"
+              placeholder="Optionele beschrijving"></textarea>
           </div>
 
           <div class="form-row">
@@ -340,8 +360,8 @@ async function deleteAllCompleted() {
     try {
       // Verwijder alle voltooide taken
       const deletePromises = completedTasks.value
-        .filter(task => canEdit(task))
-        .map(task =>
+        .filter((task) => canEdit(task))
+        .map((task) =>
           $fetch(`${apiBase}/delete_task.php`, {
             method: 'POST',
             headers: {
@@ -639,12 +659,12 @@ onMounted(() => {
   border: none;
   font-size: 18px;
   cursor: pointer;
-  opacity: 0.5;
+  opacity: 1;
   transition: opacity 0.2s;
 }
 
 .btn-delete:hover {
-  opacity: 1;
+  opacity: 0.5;
 }
 
 .btn-primary {
