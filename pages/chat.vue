@@ -126,6 +126,45 @@ function getAuthToken() {
   return localStorage.getItem('authToken');
 }
 
+// Request notification permission
+async function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    try {
+      const permission = await Notification.requestPermission();
+      console.log('Notification permission:', permission);
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    }
+  }
+}
+
+// Show browser notification
+function showNotification(messageData) {
+  // Alleen tonen als window niet in focus is
+  if (document.hasFocus()) {
+    return;
+  }
+
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const notification = new Notification(`Nieuw bericht van ${messageData.sender_name}`, {
+      body: messageData.message,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: `chat-${messageData.conversation_id}`,
+      requireInteraction: false,
+      silent: false
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+
+    // Auto-close na 5 seconden
+    setTimeout(() => notification.close(), 5000);
+  }
+}
+
 // Setup Pusher
 onMounted(async () => {
   // Check if user is logged in
@@ -134,6 +173,9 @@ onMounted(async () => {
     navigateTo('/login');
     return;
   }
+
+  // Request notification permission
+  await requestNotificationPermission();
 
   // Haal huidige user info op
   try {
@@ -245,6 +287,9 @@ async function selectConversation(convId) {
     if (data.sender_id !== currentUserId.value) {
       messages.value.push(data);
       scrollToBottom();
+
+      // Toon notificatie als het venster niet in focus is
+      showNotification(data);
     }
   });
 
