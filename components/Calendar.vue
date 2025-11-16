@@ -1355,6 +1355,8 @@ select {
   font-weight: 600;
   margin-bottom: 6px;
   font-size: 14px;
+  display: flex;
+  justify-content: center;
 }
 
 .events-container {
