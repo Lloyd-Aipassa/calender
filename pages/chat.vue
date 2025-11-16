@@ -409,6 +409,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #fff;
 }
 
 .sidebar-header h3 {
@@ -776,6 +777,7 @@ onUnmounted(() => {
 
   .conversation {
     padding: 12px 15px;
+    background-color: #fff;
   }
 
   .conv-content strong {
