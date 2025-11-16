@@ -69,7 +69,10 @@
               placeholder="Type een bericht..."
               :disabled="sending"
             />
-            <button @click="sendMessage" :disabled="sending || !newMessage.trim()">
+            <button
+              @click="sendMessage"
+              :disabled="!newMessage || !newMessage.trim() || sending"
+              class="send-btn">
               Verstuur
             </button>
           </div>
