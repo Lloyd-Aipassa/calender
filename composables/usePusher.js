@@ -57,22 +57,33 @@ async function showGlobalNotification(messageData) {
     }
   };
 
-  // Try direct browser notification first (for testing)
-  console.log('✅ Toon notificatie direct (testing mode):', title);
-  try {
-    const notification = new Notification(title, notificationOptions);
-    console.log('✅ Notification created:', notification);
+  // Use Service Worker for notifications (works on mobile!)
+  if (swRegistration && swRegistration.showNotification) {
+    console.log('✅ Using Service Worker notification (mobile compatible)');
+    try {
+      await swRegistration.showNotification(title, notificationOptions);
+      console.log('✅ Service Worker notification shown');
+    } catch (error) {
+      console.error('❌ Service Worker notification failed:', error);
+    }
+  } else {
+    // Fallback to direct notification for older desktop browsers
+    console.log('✅ Using direct notification (desktop fallback)');
+    try {
+      const notification = new Notification(title, notificationOptions);
+      console.log('✅ Notification created:', notification);
 
-    notification.onclick = () => {
-      console.log('Notification clicked!');
-      window.focus();
-      // Navigate to chat if possible
-      if (window.location.pathname !== '/chat') {
-        window.location.href = '/chat';
-      }
-    };
-  } catch (error) {
-    console.error('❌ Direct notification failed:', error);
+      notification.onclick = () => {
+        console.log('Notification clicked!');
+        window.focus();
+        // Navigate to chat if possible
+        if (window.location.pathname !== '/chat') {
+          window.location.href = '/chat';
+        }
+      };
+    } catch (error) {
+      console.error('❌ Direct notification failed:', error);
+    }
   }
 }
 
