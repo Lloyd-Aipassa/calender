@@ -10,12 +10,14 @@
 
 <script setup>
 import { usePusher } from '~/composables/usePusher';
+import { useOneSignal } from '~/composables/useOneSignal';
 
 const config = useRuntimeConfig();
 const apiBase = config.public.apiBaseUrl;
 
 // Initialize global Pusher service
 const { initPusher } = usePusher();
+const { linkUserToOneSignal } = useOneSignal();
 
 onMounted(async () => {
   // Get current user from auth token
@@ -35,6 +37,10 @@ onMounted(async () => {
         if (data.success && data.user) {
           console.log('🌍 Initializing global Pusher service for user:', data.user.id);
           await initPusher(data.user.id, apiBase);
+
+          // Link user to OneSignal for push notifications
+          console.log('🔔 Linking user to OneSignal...');
+          await linkUserToOneSignal(data.user.id);
         }
       }
     } catch (error) {
