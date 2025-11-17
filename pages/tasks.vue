@@ -182,14 +182,17 @@
 
         <!-- Invite form -->
         <div class="share-section">
-          <h4>Persoon uitnodigen</h4>
+          <h4>Deel met gebruiker</h4>
           <form @submit.prevent="shareList" class="invite-form">
-            <input
-              v-model="shareListForm.email"
-              type="email"
-              placeholder="Email adres"
-              required
-              class="invite-email" />
+            <select v-model="shareListForm.shared_with_user_id" required class="invite-user">
+              <option :value="null" disabled>Selecteer een gebruiker</option>
+              <option
+                v-for="user in availableUsers"
+                :key="user.id"
+                :value="user.id">
+                {{ user.name }} ({{ user.email }})
+              </option>
+            </select>
             <select v-model="shareListForm.permission_level" class="invite-permission">
               <option value="view">Alleen bekijken</option>
               <option value="edit">Bekijken en bewerken</option>
@@ -338,6 +341,7 @@ const showAddTask = ref(false);
 const editingTask = ref(null);
 const editingList = ref(null);
 const listShares = ref([]);
+const allUsers = ref([]);
 
 const newListForm = ref({
   name: '',
@@ -350,7 +354,7 @@ const editListForm = ref({
 });
 
 const shareListForm = ref({
-  email: '',
+  shared_with_user_id: null,
   permission_level: 'view',
 });
 
@@ -420,6 +424,12 @@ const displayedTasks = computed(() => {
   if (filter.value === 'active') return activeTasks.value;
   if (filter.value === 'completed') return completedTasks.value;
   return filteredTasks.value;
+});
+
+const availableUsers = computed(() => {
+  // Filter out users who already have access to this list
+  const sharedUserIds = listShares.value.map(s => s.shared_with_user_id);
+  return allUsers.value.filter(u => !sharedUserIds.includes(u.id));
 });
 
 // Helper functions
@@ -586,9 +596,26 @@ function openListMenu(list) {
   showEditListModal.value = true;
 }
 
+async function fetchAllUsers() {
+  try {
+    const response = await fetch(`${apiBase}/get_all_users.php`, {
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch users');
+
+    const data = await response.json();
+    allUsers.value = data.users || [];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+  }
+}
+
 async function openShareListModal() {
   showShareListModal.value = true;
-  await fetchListShares();
+  await Promise.all([fetchListShares(), fetchAllUsers()]);
 }
 
 async function fetchListShares() {
@@ -614,6 +641,11 @@ async function fetchListShares() {
 }
 
 async function shareList() {
+  if (!shareListForm.value.shared_with_user_id) {
+    alert('Selecteer een gebruiker');
+    return;
+  }
+
   try {
     const response = await fetch(`${apiBase}/share_task_list.php`, {
       method: 'POST',
@@ -635,7 +667,7 @@ async function shareList() {
     }
 
     if (data.success) {
-      shareListForm.value = { email: '', permission_level: 'view' };
+      shareListForm.value = { shared_with_user_id: null, permission_level: 'view' };
       await fetchListShares();
       alert('Lijst gedeeld!');
     }
@@ -835,10 +867,11 @@ function closeEditListModal() {
 function closeShareListModal() {
   showShareListModal.value = false;
   shareListForm.value = {
-    email: '',
+    shared_with_user_id: null,
     permission_level: 'view',
   };
   listShares.value = [];
+  allUsers.value = [];
 }
 
 // Initialize
@@ -1357,8 +1390,9 @@ watch(showAddTask, (isShown) => {
   align-items: center;
 }
 
-.invite-email {
+.invite-user {
   flex: 1;
+  min-width: 200px;
 }
 
 .invite-permission {
@@ -1448,7 +1482,7 @@ watch(showAddTask, (isShown) => {
     flex-direction: column;
   }
 
-  .invite-email,
+  .invite-user,
   .invite-permission {
     width: 100%;
   }
