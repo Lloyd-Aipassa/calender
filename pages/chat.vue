@@ -152,71 +152,83 @@ async function showNotification(messageData) {
     console.log('Window has focus, skipping notification');
     return;
   }
+  console.log('✅ Window does NOT have focus - showing notification');
 
-  // Detect mobile device
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  // Detect mobile device - better detection
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && window.innerWidth <= 768;
+  const userAgent = navigator.userAgent;
+  console.log('User Agent:', userAgent);
+  console.log('Window width:', window.innerWidth);
   console.log('Is mobile device?', isMobile);
 
-  if (isMobile) {
-    // Mobile: Show in-app notification banner (Web Notifications don't work well on mobile browsers)
-    console.log('Showing mobile in-app notification banner...');
-    showMobileNotificationBanner(messageData);
+  // Try standard Web Notifications first (works on desktop and some mobile browsers)
+  if ('Notification' in window && Notification.permission === 'granted') {
+    console.log('Attempting to show standard notification...');
 
-    // Also try Service Worker notification for PWA
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification(`Nieuw bericht van ${messageData.sender_name}`, {
-          body: messageData.message,
-          icon: '/icon-192.png',
-          badge: '/icon-192.png',
-          tag: `chat-${messageData.conversation_id}`,
-          requireInteraction: false,
-          vibrate: [200, 100, 200],
-          data: {
-            url: '/chat',
-            conversation_id: messageData.conversation_id
-          }
-        });
-        console.log('Service Worker notification shown!');
-      } catch (error) {
-        console.log('Service Worker notification failed:', error);
-      }
+    try {
+      const notification = new Notification(`Nieuw bericht van ${messageData.sender_name}`, {
+        body: messageData.message,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: `chat-${messageData.conversation_id}`,
+        requireInteraction: false,
+        silent: false
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+
+      // Auto-close na 5 seconden
+      setTimeout(() => notification.close(), 5000);
+      console.log('Standard notification shown!');
+    } catch (error) {
+      console.log('Standard notification failed:', error);
     }
-    return;
   }
 
-  // Desktop: Use standard Web Notifications
-  if ('Notification' in window && Notification.permission === 'granted') {
-    console.log('Attempting to show desktop notification...');
+  // Additionally show mobile banner if on mobile
+  if (isMobile) {
+    console.log('Also showing mobile in-app notification banner...');
+    try {
+      showMobileNotificationBanner(messageData);
+    } catch (error) {
+      console.error('Mobile banner error:', error);
+    }
+  }
 
-    const notification = new Notification(`Nieuw bericht van ${messageData.sender_name}`, {
-      body: messageData.message,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      tag: `chat-${messageData.conversation_id}`,
-      requireInteraction: false,
-      silent: false
-    });
-
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-    };
-
-    // Auto-close na 5 seconden
-    setTimeout(() => notification.close(), 5000);
-    console.log('Desktop notification shown!');
-  } else {
-    console.log('Notification not supported or permission not granted');
+  // Also try Service Worker notification for PWA
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(`Nieuw bericht van ${messageData.sender_name}`, {
+        body: messageData.message,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: `chat-${messageData.conversation_id}`,
+        requireInteraction: false,
+        vibrate: [200, 100, 200],
+        data: {
+          url: '/chat',
+          conversation_id: messageData.conversation_id
+        }
+      });
+      console.log('Service Worker notification shown!');
+    } catch (error) {
+      console.log('Service Worker notification failed:', error);
+    }
   }
 }
 
 // Show mobile in-app notification banner
 function showMobileNotificationBanner(messageData) {
+  console.log('showMobileNotificationBanner called');
+
   // Remove existing banner if any
   const existingBanner = document.querySelector('.mobile-notification-banner');
   if (existingBanner) {
+    console.log('Removing existing banner');
     existingBanner.remove();
   }
 
@@ -233,13 +245,18 @@ function showMobileNotificationBanner(messageData) {
     </div>
   `;
 
+  console.log('Banner created:', banner);
+
   // Add vibration feedback
   if ('vibrate' in navigator) {
+    console.log('Vibrating device...');
     navigator.vibrate([200, 100, 200]);
   }
 
   // Add to page
+  console.log('Appending banner to body...');
   document.body.appendChild(banner);
+  console.log('Banner appended. Total banners in DOM:', document.querySelectorAll('.mobile-notification-banner').length);
 
   // Close button handler
   const closeBtn = banner.querySelector('.notification-close');
