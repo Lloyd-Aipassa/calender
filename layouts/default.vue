@@ -12,7 +12,7 @@
 import { usePusher } from '~/composables/usePusher';
 
 const config = useRuntimeConfig();
-const apiBase = config.public.apiBase;
+const apiBase = config.public.apiBaseUrl;
 
 // Initialize global Pusher service
 const { initPusher } = usePusher();

@@ -14,13 +14,21 @@ async function showGlobalNotification(messageData) {
   console.log('📱 document.hidden:', document.hidden);
   console.log('📱 document.visibilityState:', document.visibilityState);
 
-  // Check if window is visible - use Page Visibility API
-  const isPageVisible = document.visibilityState === 'visible' && document.hasFocus();
+  // Check if window is visible AND focused
+  // Only skip notification if BOTH are true (user is actively looking at the page)
+  const isPageVisible = document.visibilityState === 'visible';
+  const isPageFocused = document.hasFocus();
 
-  if (isPageVisible) {
-    console.log('⏭️ Page is visible and focused - skipping notification');
+  if (isPageVisible && isPageFocused) {
+    console.log('⏭️ Page is visible AND focused - skipping notification (user can see the page)');
     return;
   }
+
+  console.log('📢 Showing notification because:', {
+    visible: isPageVisible,
+    focused: isPageFocused,
+    reason: !isPageVisible ? 'page hidden (background tab/minimized)' : 'page not focused (user on different window)'
+  });
 
   if (!('Notification' in window)) {
     console.log('❌ Notifications not supported');
@@ -31,8 +39,6 @@ async function showGlobalNotification(messageData) {
     console.log('❌ Notification permission not granted');
     return;
   }
-
-  console.log('✅ Page NOT visible/focused - showing notification');
 
   const title = `Nieuw bericht van ${messageData.sender_name}`;
   const notificationOptions = {
