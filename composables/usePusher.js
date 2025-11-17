@@ -5,6 +5,7 @@ let pusherInstance = null;
 let currentChannel = null;
 let currentUserId = null;
 let currentConversationId = null;
+let currentCallback = null; // Store the current UI update callback
 
 // Show notification function - works globally
 async function showGlobalNotification(messageData) {
@@ -129,8 +130,18 @@ export const usePusher = () => {
 
       console.log('✅ Pusher ready, subscribing now...');
 
+      // Check if already subscribed to this conversation
+      if (currentConversationId === conversationId && currentChannel) {
+        console.log('⚠️ Already subscribed to this conversation, updating callback');
+        currentCallback = onNewMessage; // Update the callback for UI updates
+        return;
+      }
+
       // Unsubscribe from previous channel if any
       if (currentChannel) {
+        console.log('🔄 Unsubscribing from previous channel:', currentChannel.name);
+        // Unbind all events first to prevent memory leaks
+        currentChannel.unbind_all();
         pusherInstance.unsubscribe(currentChannel.name);
         currentChannel = null;
       }
@@ -138,6 +149,7 @@ export const usePusher = () => {
       const channelName = `private-conversation-${conversationId}`;
       console.log('🌍 Global service subscribing to:', channelName);
       currentConversationId = conversationId;
+      currentCallback = onNewMessage; // Store the callback
 
       currentChannel = pusherInstance.subscribe(channelName);
 
@@ -162,8 +174,10 @@ export const usePusher = () => {
           showGlobalNotification(data);
 
           // Also trigger callback if provided (for updating UI when chat is open)
-          if (onNewMessage) {
-            onNewMessage(data);
+          // Use currentCallback instead of onNewMessage closure
+          if (currentCallback) {
+            console.log('📲 Calling UI update callback');
+            currentCallback(data);
           }
         } else {
           console.log('⏭️ Skipping own message');
