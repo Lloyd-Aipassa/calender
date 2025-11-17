@@ -450,7 +450,7 @@ function formatDate(dateString) {
 // List functions
 async function fetchLists() {
   try {
-    const response = await fetch(`${apiBase}/endpoints/get_task_lists.php`, {
+    const response = await fetch(`${apiBase}/get_task_lists.php`, {
       headers: {
         Authorization: getAuthToken(),
       },
@@ -469,8 +469,8 @@ async function fetchLists() {
 async function fetchTasks() {
   try {
     const url = selectedListId.value
-      ? `${apiBase}/endpoints/get_tasks.php?list_id=${selectedListId.value}`
-      : `${apiBase}/endpoints/get_tasks.php`;
+      ? `${apiBase}/get_tasks.php?list_id=${selectedListId.value}`
+      : `${apiBase}/get_tasks.php`;
 
     const response = await fetch(url, {
       headers: {
@@ -495,7 +495,7 @@ function selectList(listId) {
 
 async function createList() {
   try {
-    const response = await fetch(`${apiBase}/endpoints/create_task_list.php`, {
+    const response = await fetch(`${apiBase}/create_task_list.php`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -520,7 +520,7 @@ async function createList() {
 
 async function updateList() {
   try {
-    const response = await fetch(`${apiBase}/endpoints/update_task_list.php`, {
+    const response = await fetch(`${apiBase}/update_task_list.php`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -551,7 +551,7 @@ async function deleteList() {
   }
 
   try {
-    const response = await fetch(`${apiBase}/endpoints/delete_task_list.php`, {
+    const response = await fetch(`${apiBase}/delete_task_list.php`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -596,7 +596,7 @@ async function fetchListShares() {
 
   try {
     const response = await fetch(
-      `${apiBase}/endpoints/get_list_shares.php?list_id=${selectedListId.value}`,
+      `${apiBase}/get_list_shares.php?list_id=${selectedListId.value}`,
       {
         headers: {
           Authorization: getAuthToken(),
@@ -615,7 +615,7 @@ async function fetchListShares() {
 
 async function shareList() {
   try {
-    const response = await fetch(`${apiBase}/endpoints/share_task_list.php`, {
+    const response = await fetch(`${apiBase}/share_task_list.php`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -651,7 +651,7 @@ async function unshareList(sharedWithUserId) {
   }
 
   try {
-    const response = await fetch(`${apiBase}/endpoints/unshare_task_list.php`, {
+    const response = await fetch(`${apiBase}/unshare_task_list.php`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -679,8 +679,8 @@ async function unshareList(sharedWithUserId) {
 async function saveTask() {
   try {
     const url = editingTask.value
-      ? `${apiBase}/endpoints/update_task.php`
-      : `${apiBase}/endpoints/create_task.php`;
+      ? `${apiBase}/update_task.php`
+      : `${apiBase}/create_task.php`;
 
     const payload = editingTask.value
       ? { id: editingTask.value.id, ...taskForm.value }
@@ -711,7 +711,7 @@ async function saveTask() {
 
 async function toggleTask(task) {
   try {
-    const response = await fetch(`${apiBase}/endpoints/update_task.php`, {
+    const response = await fetch(`${apiBase}/update_task.php`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -756,7 +756,7 @@ async function confirmDelete(task) {
   }
 
   try {
-    const response = await fetch(`${apiBase}/endpoints/delete_task.php`, {
+    const response = await fetch(`${apiBase}/delete_task.php`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -788,7 +788,7 @@ async function deleteAllCompleted() {
   for (const task of completedTasksToDelete) {
     if (canEdit(task)) {
       try {
-        await fetch(`${apiBase}/endpoints/delete_task.php`, {
+        await fetch(`${apiBase}/delete_task.php`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
