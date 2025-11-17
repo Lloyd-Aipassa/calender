@@ -191,25 +191,21 @@ export const usePusher = () => {
       });
 
       currentChannel.bind('new-message', (data) => {
-        console.log('📨 Global service received message:', data);
+        console.log('📨 Conversation channel received message:', data);
 
         // Check if message is from another user
         const isOwnMessage = parseInt(data.sender_id) === parseInt(currentUserId);
         console.log('Is own message?', isOwnMessage, '(sender:', data.sender_id, 'current:', currentUserId, ')');
 
         if (!isOwnMessage) {
-          // Always show notification (global service handles this)
-          console.log('🔔 Triggering global notification...');
-          showGlobalNotification(data);
-
-          // Also trigger callback if provided (for updating UI when chat is open)
-          // Use currentCallback instead of onNewMessage closure
+          // DON'T show notification here - user channel handles that
+          // Only trigger UI update callback when chat is open
           if (currentCallback) {
-            console.log('📲 Calling UI update callback');
+            console.log('📲 Calling UI update callback (conversation channel)');
             currentCallback(data);
           }
         } else {
-          console.log('⏭️ Skipping own message');
+          console.log('⏭️ Skipping own message (conversation channel)');
         }
       });
     };
