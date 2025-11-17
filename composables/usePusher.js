@@ -78,12 +78,34 @@ async function showGlobalNotification(messageData) {
 
 export const usePusher = () => {
   const initPusher = async (userId, apiBase) => {
+    // Check if there's already a Pusher instance (from Calendar.vue or previous init)
     if (pusherInstance) {
-      console.log('Pusher already initialized');
+      console.log('⚠️ Pusher already initialized, reusing existing instance');
+
+      // But still subscribe to user channel if not already done
+      if (!userChannel) {
+        const userChannelName = `user-${userId}`;
+        console.log('📺 Subscribing to user notification channel (late):', userChannelName);
+        userChannel = pusherInstance.subscribe(userChannelName);
+
+        userChannel.bind('pusher:subscription_succeeded', () => {
+          console.log('✅ Subscribed to user notification channel:', userChannelName);
+        });
+
+        userChannel.bind('chat-message', (data) => {
+          console.log('📨 Received chat message on user channel:', data);
+          const isOwnMessage = parseInt(data.sender_id) === parseInt(userId);
+          if (!isOwnMessage) {
+            console.log('🔔 Triggering notification from user channel...');
+            showGlobalNotification(data);
+          }
+        });
+      }
+
       return pusherInstance;
     }
 
-    console.log('Initializing global Pusher service...');
+    console.log('Initializing NEW Pusher instance...');
     currentUserId = userId;
 
     // Register Service Worker (same as Calendar.vue)
