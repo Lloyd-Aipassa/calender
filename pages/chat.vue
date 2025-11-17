@@ -144,10 +144,16 @@ async function requestNotificationPermission() {
 // Show browser notification (same approach as Calendar.vue - works better!)
 async function showNotification(messageData) {
   console.log('🔔 showNotification called:', messageData);
+  console.log('📱 document.hasFocus():', document.hasFocus());
+  console.log('📱 document.hidden:', document.hidden);
+  console.log('📱 document.visibilityState:', document.visibilityState);
 
-  // Only show notification if window is NOT in focus
-  if (document.hasFocus()) {
-    console.log('⏭️ Window has focus - skipping notification (user can see messages)');
+  // Check if window is visible - use Page Visibility API (works better on mobile)
+  // Skip notification if page is visible and focused
+  const isPageVisible = document.visibilityState === 'visible' && document.hasFocus();
+
+  if (isPageVisible) {
+    console.log('⏭️ Page is visible and focused - skipping notification (user can see messages)');
     return;
   }
 
@@ -161,7 +167,7 @@ async function showNotification(messageData) {
     return;
   }
 
-  console.log('✅ Window NOT in focus - showing notification');
+  console.log('✅ Page NOT visible/focused - showing notification');
 
   const title = `Nieuw bericht van ${messageData.sender_name}`;
   const notificationOptions = {
