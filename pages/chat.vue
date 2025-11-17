@@ -145,6 +145,12 @@ async function requestNotificationPermission() {
 async function showNotification(messageData) {
   console.log('🔔 showNotification called:', messageData);
 
+  // Only show notification if window is NOT in focus
+  if (document.hasFocus()) {
+    console.log('⏭️ Window has focus - skipping notification (user can see messages)');
+    return;
+  }
+
   if (!('Notification' in window)) {
     console.log('❌ Notifications not supported');
     return;
@@ -154,6 +160,8 @@ async function showNotification(messageData) {
     console.log('❌ Notification permission not granted');
     return;
   }
+
+  console.log('✅ Window NOT in focus - showing notification');
 
   const title = `Nieuw bericht van ${messageData.sender_name}`;
   const notificationOptions = {
