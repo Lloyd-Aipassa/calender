@@ -2,7 +2,8 @@
 import Pusher from 'pusher-js';
 
 let pusherInstance = null;
-let currentChannel = null;
+let currentChannel = null; // Current conversation channel for UI updates
+let userChannel = null; // User-level channel for notifications (always active)
 let currentUserId = null;
 let currentConversationId = null;
 let currentCallback = null; // Store the current UI update callback
@@ -113,6 +114,37 @@ export const usePusher = () => {
       console.error('Global Pusher error:', err);
     });
 
+    // Subscribe to user-level channel for notifications (like Calendar.vue does)
+    // This channel is ALWAYS active, even when chat is not open
+    const userChannelName = `user-${userId}`;
+    console.log('📺 Subscribing to user notification channel:', userChannelName);
+    userChannel = pusherInstance.subscribe(userChannelName);
+
+    userChannel.bind('pusher:subscription_succeeded', () => {
+      console.log('✅ Subscribed to user notification channel:', userChannelName);
+    });
+
+    userChannel.bind('pusher:subscription_error', (err) => {
+      console.error('❌ User channel subscription error:', err);
+    });
+
+    // Listen for chat messages on user channel (for notifications)
+    userChannel.bind('chat-message', (data) => {
+      console.log('📨 Received chat message on user channel:', data);
+
+      // Check if message is from another user
+      const isOwnMessage = parseInt(data.sender_id) === parseInt(userId);
+      console.log('Is own message?', isOwnMessage, '(sender:', data.sender_id, 'current:', userId, ')');
+
+      if (!isOwnMessage) {
+        // Always show notification for messages from others
+        console.log('🔔 Triggering notification from user channel...');
+        showGlobalNotification(data);
+      } else {
+        console.log('⏭️ Skipping own message from user channel');
+      }
+    });
+
     return pusherInstance;
   };
 
@@ -197,6 +229,13 @@ export const usePusher = () => {
 
   const disconnect = () => {
     if (pusherInstance) {
+      // Unsubscribe from user channel
+      if (userChannel) {
+        userChannel.unbind_all();
+        pusherInstance.unsubscribe(userChannel.name);
+        userChannel = null;
+      }
+
       pusherInstance.disconnect();
       pusherInstance = null;
       currentChannel = null;
