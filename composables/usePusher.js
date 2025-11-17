@@ -57,21 +57,22 @@ async function showGlobalNotification(messageData) {
     }
   };
 
-  // EXACT COPY of Calendar.vue notification logic
-  // Gebruik Service Worker voor notificaties (werkt beter op mobiel)
-  if (swRegistration && swRegistration.showNotification) {
-    console.log('✅ Toon notificatie via Service Worker:', title);
-    try {
-      await swRegistration.showNotification(title, notificationOptions);
-    } catch (error) {
-      console.error('Service Worker notification failed:', error);
-      // Fallback naar normale notificatie
-      new Notification(title, notificationOptions);
-    }
-  } else {
-    // Fallback voor desktop browsers
-    console.log('✅ Toon notificatie direct:', title);
-    new Notification(title, notificationOptions);
+  // Try direct browser notification first (for testing)
+  console.log('✅ Toon notificatie direct (testing mode):', title);
+  try {
+    const notification = new Notification(title, notificationOptions);
+    console.log('✅ Notification created:', notification);
+
+    notification.onclick = () => {
+      console.log('Notification clicked!');
+      window.focus();
+      // Navigate to chat if possible
+      if (window.location.pathname !== '/chat') {
+        window.location.href = '/chat';
+      }
+    };
+  } catch (error) {
+    console.error('❌ Direct notification failed:', error);
   }
 }
 
