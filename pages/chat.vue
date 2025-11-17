@@ -147,11 +147,13 @@ async function showNotification(messageData) {
   console.log('Document has focus?', document.hasFocus());
   console.log('Notification permission:', Notification.permission);
 
+  // TEMPORARY TEST: Focus check disabled - will show notifications even when window has focus
   // Alleen tonen als window niet in focus is
-  if (document.hasFocus()) {
-    console.log('Window has focus, skipping notification');
-    return;
-  }
+  // if (document.hasFocus()) {
+  //   console.log('Window has focus, skipping notification');
+  //   return;
+  // }
+  console.log('⚠️ FOCUS CHECK DISABLED - Testing notifications...');
 
   if ('Notification' in window && Notification.permission === 'granted') {
     console.log('Attempting to show notification...');
