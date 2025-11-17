@@ -49,37 +49,42 @@ async function showGlobalNotification(messageData) {
     }
   };
 
-  // Use Service Worker for notifications (works better on mobile and PWA)
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    console.log('✅ Showing notification via Service Worker:', title);
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(title, notificationOptions);
-      console.log('✅ Service Worker notification shown!');
-      return;
-    } catch (error) {
-      console.error('Service Worker notification failed:', error);
-      // Fall through to regular notification
-    }
-  }
-
-  // Fallback: Regular browser notification (desktop)
-  console.log('✅ Showing regular notification:', title);
+  // TESTING: Use regular browser notification first (easier to debug)
+  console.log('🔔 Showing regular browser notification:', title);
   try {
     const notification = new Notification(title, notificationOptions);
 
+    console.log('✅ Notification object created!', notification);
+
     notification.onclick = () => {
+      console.log('Notification clicked!');
       window.focus();
-      // Navigate to chat page
       window.location.href = '/chat';
       notification.close();
     };
 
+    notification.onerror = (error) => {
+      console.error('❌ Notification error:', error);
+    };
+
+    notification.onshow = () => {
+      console.log('✅ Notification is now showing!');
+    };
+
+    notification.onclose = () => {
+      console.log('Notification closed');
+    };
+
     // Auto-close after 5 seconds
-    setTimeout(() => notification.close(), 5000);
-    console.log('✅ Regular notification shown!');
+    setTimeout(() => {
+      console.log('Auto-closing notification...');
+      notification.close();
+    }, 5000);
+
   } catch (error) {
-    console.error('Regular notification failed:', error);
+    console.error('❌ Failed to create notification:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
   }
 }
 
