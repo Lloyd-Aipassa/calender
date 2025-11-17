@@ -141,83 +141,64 @@ async function requestNotificationPermission() {
   }
 }
 
-// Show browser notification
+// Show browser notification (same approach as Calendar.vue - works better!)
 async function showNotification(messageData) {
-  console.log('showNotification called with:', messageData);
-  console.log('Document has focus?', document.hasFocus());
-  console.log('Notification permission:', Notification.permission);
+  console.log('🔔 showNotification called:', messageData);
 
-  // Alleen tonen als window niet in focus is
-  if (document.hasFocus()) {
-    console.log('Window has focus, skipping notification');
+  if (!('Notification' in window)) {
+    console.log('❌ Notifications not supported');
     return;
   }
-  console.log('✅ Window does NOT have focus - showing notification');
 
-  // Detect mobile device - better detection
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && window.innerWidth <= 768;
-  const userAgent = navigator.userAgent;
-  console.log('User Agent:', userAgent);
-  console.log('Window width:', window.innerWidth);
-  console.log('Is mobile device?', isMobile);
-
-  // Try standard Web Notifications first (works on desktop and some mobile browsers)
-  if ('Notification' in window && Notification.permission === 'granted') {
-    console.log('Attempting to show standard notification...');
-
-    try {
-      const notification = new Notification(`Nieuw bericht van ${messageData.sender_name}`, {
-        body: messageData.message,
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
-        tag: `chat-${messageData.conversation_id}`,
-        requireInteraction: false,
-        silent: false
-      });
-
-      notification.onclick = () => {
-        window.focus();
-        notification.close();
-      };
-
-      // Auto-close na 5 seconden
-      setTimeout(() => notification.close(), 5000);
-      console.log('Standard notification shown!');
-    } catch (error) {
-      console.log('Standard notification failed:', error);
-    }
+  if (Notification.permission !== 'granted') {
+    console.log('❌ Notification permission not granted');
+    return;
   }
 
-  // Additionally show mobile banner if on mobile
-  if (isMobile) {
-    console.log('Also showing mobile in-app notification banner...');
-    try {
-      showMobileNotificationBanner(messageData);
-    } catch (error) {
-      console.error('Mobile banner error:', error);
+  const title = `Nieuw bericht van ${messageData.sender_name}`;
+  const notificationOptions = {
+    body: messageData.message,
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: `chat-${messageData.conversation_id}`,
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
+    data: {
+      url: '/chat',
+      conversation_id: messageData.conversation_id
     }
-  }
+  };
 
-  // Also try Service Worker notification for PWA
+  // Use Service Worker for notifications (works better on mobile and PWA)
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    console.log('✅ Showing notification via Service Worker:', title);
     try {
       const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(`Nieuw bericht van ${messageData.sender_name}`, {
-        body: messageData.message,
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
-        tag: `chat-${messageData.conversation_id}`,
-        requireInteraction: false,
-        vibrate: [200, 100, 200],
-        data: {
-          url: '/chat',
-          conversation_id: messageData.conversation_id
-        }
-      });
-      console.log('Service Worker notification shown!');
+      await registration.showNotification(title, notificationOptions);
+      console.log('✅ Service Worker notification shown!');
+      return;
     } catch (error) {
-      console.log('Service Worker notification failed:', error);
+      console.error('Service Worker notification failed:', error);
+      // Fall through to regular notification
     }
+  }
+
+  // Fallback: Regular browser notification (desktop)
+  console.log('✅ Showing regular notification:', title);
+  try {
+    const notification = new Notification(title, notificationOptions);
+
+    notification.onclick = () => {
+      window.focus();
+      navigateTo('/chat');
+      notification.close();
+    };
+
+    // Auto-close after 5 seconden
+    setTimeout(() => notification.close(), 5000);
+    console.log('✅ Regular notification shown!');
+  } catch (error) {
+    console.error('Regular notification failed:', error);
   }
 }
 
