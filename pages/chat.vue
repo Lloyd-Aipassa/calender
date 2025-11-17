@@ -143,15 +143,23 @@ async function requestNotificationPermission() {
 
 // Show browser notification
 async function showNotification(messageData) {
+  console.log('showNotification called with:', messageData);
+  console.log('Document has focus?', document.hasFocus());
+  console.log('Notification permission:', Notification.permission);
+
   // Alleen tonen als window niet in focus is
   if (document.hasFocus()) {
+    console.log('Window has focus, skipping notification');
     return;
   }
 
   if ('Notification' in window && Notification.permission === 'granted') {
+    console.log('Attempting to show notification...');
+
     // Probeer eerst via Service Worker (werkt beter op mobiel)
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       try {
+        console.log('Trying Service Worker notification...');
         const registration = await navigator.serviceWorker.ready;
         await registration.showNotification(`Nieuw bericht van ${messageData.sender_name}`, {
           body: messageData.message,
@@ -165,6 +173,7 @@ async function showNotification(messageData) {
             conversation_id: messageData.conversation_id
           }
         });
+        console.log('Service Worker notification shown!');
         return;
       } catch (error) {
         console.log('Service Worker notification failed, falling back to regular notification:', error);
@@ -172,6 +181,7 @@ async function showNotification(messageData) {
     }
 
     // Fallback: gewone notificatie (desktop)
+    console.log('Showing regular notification...');
     const notification = new Notification(`Nieuw bericht van ${messageData.sender_name}`, {
       body: messageData.message,
       icon: '/icon-192.png',
@@ -188,6 +198,9 @@ async function showNotification(messageData) {
 
     // Auto-close na 5 seconden
     setTimeout(() => notification.close(), 5000);
+    console.log('Regular notification shown!');
+  } else {
+    console.log('Notification not supported or permission not granted');
   }
 }
 
@@ -309,13 +322,23 @@ async function selectConversation(convId) {
 
   currentChannel.bind('new-message', (data) => {
     console.log('📨 Received new message:', data);
+    console.log('Current user ID:', currentUserId.value, 'Sender ID:', data.sender_id);
+    console.log('Type check:', typeof currentUserId.value, typeof data.sender_id);
+
+    // Convert both to numbers for comparison
+    const isOwnMessage = parseInt(data.sender_id) === parseInt(currentUserId.value);
+    console.log('Is own message?', isOwnMessage);
+
     // Voeg nieuw bericht toe (alleen als het niet van jezelf is - want die hebben we al lokaal)
-    if (data.sender_id !== currentUserId.value) {
+    if (!isOwnMessage) {
       messages.value.push(data);
       scrollToBottom();
 
       // Toon notificatie als het venster niet in focus is
+      console.log('Calling showNotification...');
       showNotification(data);
+    } else {
+      console.log('Skipping notification - own message');
     }
   });
 
