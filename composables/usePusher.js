@@ -48,7 +48,7 @@ async function showGlobalNotification(messageData) {
     body: messageData.message,
     icon: '/icon-192.png',
     badge: '/icon-192.png',
-    tag: `chat-${messageData.conversation_id}`,
+    tag: `chat-${messageData.id}-${Date.now()}`, // Unique per message to show all notifications
     vibrate: [200, 100, 200],
     requireInteraction: false,
     data: {
