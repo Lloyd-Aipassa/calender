@@ -4,6 +4,82 @@ import Pusher from 'pusher-js';
 let pusherInstance = null;
 let currentChannel = null;
 let currentUserId = null;
+let currentConversationId = null;
+
+// Show notification function - works globally
+async function showGlobalNotification(messageData) {
+  console.log('🔔 Global notification called:', messageData);
+  console.log('📱 document.hasFocus():', document.hasFocus());
+  console.log('📱 document.hidden:', document.hidden);
+  console.log('📱 document.visibilityState:', document.visibilityState);
+
+  // Check if window is visible - use Page Visibility API
+  const isPageVisible = document.visibilityState === 'visible' && document.hasFocus();
+
+  if (isPageVisible) {
+    console.log('⏭️ Page is visible and focused - skipping notification');
+    return;
+  }
+
+  if (!('Notification' in window)) {
+    console.log('❌ Notifications not supported');
+    return;
+  }
+
+  if (Notification.permission !== 'granted') {
+    console.log('❌ Notification permission not granted');
+    return;
+  }
+
+  console.log('✅ Page NOT visible/focused - showing notification');
+
+  const title = `Nieuw bericht van ${messageData.sender_name}`;
+  const notificationOptions = {
+    body: messageData.message,
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: `chat-${messageData.conversation_id}`,
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
+    data: {
+      url: '/chat',
+      conversation_id: messageData.conversation_id
+    }
+  };
+
+  // Use Service Worker for notifications (works better on mobile and PWA)
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    console.log('✅ Showing notification via Service Worker:', title);
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(title, notificationOptions);
+      console.log('✅ Service Worker notification shown!');
+      return;
+    } catch (error) {
+      console.error('Service Worker notification failed:', error);
+      // Fall through to regular notification
+    }
+  }
+
+  // Fallback: Regular browser notification (desktop)
+  console.log('✅ Showing regular notification:', title);
+  try {
+    const notification = new Notification(title, notificationOptions);
+
+    notification.onclick = () => {
+      window.focus();
+      // Navigate to chat page
+      window.location.href = '/chat';
+      notification.close();
+    };
+
+    // Auto-close after 5 seconds
+    setTimeout(() => notification.close(), 5000);
+    console.log('✅ Regular notification shown!');
+  } catch (error) {
+    console.error('Regular notification failed:', error);
+  }
+}
 
 export const usePusher = () => {
   const initPusher = async (userId, apiBase) => {
@@ -23,7 +99,7 @@ export const usePusher = () => {
 
     pusherInstance = new Pusher('eca46c4499768c752eed', {
       cluster: 'eu',
-      authEndpoint: `${apiBase}/chat/pusher_auth.php`,
+      authEndpoint: `${apiBase}/endpoints/chat/pusher_auth.php`,
       auth: {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -55,24 +131,37 @@ export const usePusher = () => {
     }
 
     const channelName = `private-conversation-${conversationId}`;
-    console.log('Subscribing to:', channelName);
+    console.log('🌍 Global service subscribing to:', channelName);
+    currentConversationId = conversationId;
 
     currentChannel = pusherInstance.subscribe(channelName);
 
     currentChannel.bind('pusher:subscription_succeeded', () => {
-      console.log('Successfully subscribed to', channelName);
+      console.log('✅ Global service subscribed to', channelName);
     });
 
     currentChannel.bind('pusher:subscription_error', (err) => {
-      console.error('Subscription error:', err);
+      console.error('❌ Global subscription error:', err);
     });
 
     currentChannel.bind('new-message', (data) => {
-      console.log('📨 New message received:', data);
+      console.log('📨 Global service received message:', data);
 
-      // Only trigger callback for messages from other users
-      if (parseInt(data.sender_id) !== parseInt(currentUserId)) {
-        onNewMessage(data);
+      // Check if message is from another user
+      const isOwnMessage = parseInt(data.sender_id) === parseInt(currentUserId);
+      console.log('Is own message?', isOwnMessage, '(sender:', data.sender_id, 'current:', currentUserId, ')');
+
+      if (!isOwnMessage) {
+        // Always show notification (global service handles this)
+        console.log('🔔 Triggering global notification...');
+        showGlobalNotification(data);
+
+        // Also trigger callback if provided (for updating UI when chat is open)
+        if (onNewMessage) {
+          onNewMessage(data);
+        }
+      } else {
+        console.log('⏭️ Skipping own message');
       }
     });
   };
@@ -81,7 +170,8 @@ export const usePusher = () => {
     if (currentChannel) {
       pusherInstance.unsubscribe(currentChannel.name);
       currentChannel = null;
-      console.log('Unsubscribed from current channel');
+      currentConversationId = null;
+      console.log('🌍 Global service unsubscribed from current channel');
     }
   };
 
@@ -90,15 +180,19 @@ export const usePusher = () => {
       pusherInstance.disconnect();
       pusherInstance = null;
       currentChannel = null;
-      console.log('Pusher disconnected');
+      currentConversationId = null;
+      console.log('🌍 Global Pusher disconnected');
     }
   };
+
+  const getCurrentConversation = () => currentConversationId;
 
   return {
     initPusher,
     subscribeToConversation,
     unsubscribeFromConversation,
     disconnect,
-    getInstance: () => pusherInstance
+    getInstance: () => pusherInstance,
+    getCurrentConversation
   };
 };

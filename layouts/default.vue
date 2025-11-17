@@ -9,6 +9,40 @@
 </template>
 
 <script setup>
+import { usePusher } from '~/composables/usePusher';
+
+const config = useRuntimeConfig();
+const apiBase = config.public.apiBase;
+
+// Initialize global Pusher service
+const { initPusher } = usePusher();
+
+onMounted(async () => {
+  // Get current user from auth token
+  const token = localStorage.getItem('authToken');
+
+  if (token) {
+    try {
+      // Fetch user info to get user ID
+      const response = await fetch(`${apiBase}/endpoints/get_user_info.php`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.user) {
+          console.log('🌍 Initializing global Pusher service for user:', data.user.id);
+          await initPusher(data.user.id, apiBase);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to initialize global Pusher:', error);
+    }
+  }
+});
+
 useHead({
   link: [
     { rel: 'manifest', href: '/manifest.json' },

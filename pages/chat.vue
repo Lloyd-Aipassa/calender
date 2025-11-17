@@ -105,7 +105,7 @@
 </template>
 
 <script setup>
-import Pusher from 'pusher-js';
+import { usePusher } from '~/composables/usePusher';
 
 const apiBase = 'https://calender.brooklynwebdesign.nl/api/endpoints';
 
@@ -120,8 +120,8 @@ const newChatUserId = ref('');
 const availableUsers = ref([]);
 const showSidebar = ref(true);
 
-let pusher = null;
-let currentChannel = null;
+// Use global Pusher service instead of local instance
+const { subscribeToConversation, unsubscribeFromConversation } = usePusher();
 const messagesContainer = ref(null);
 
 // Helper om auth token te krijgen
@@ -141,82 +141,7 @@ async function requestNotificationPermission() {
   }
 }
 
-// Show browser notification (same approach as Calendar.vue - works better!)
-async function showNotification(messageData) {
-  console.log('🔔 showNotification called:', messageData);
-  console.log('📱 document.hasFocus():', document.hasFocus());
-  console.log('📱 document.hidden:', document.hidden);
-  console.log('📱 document.visibilityState:', document.visibilityState);
-
-  // Check if window is visible - use Page Visibility API (works better on mobile)
-  // Skip notification if page is visible and focused
-  const isPageVisible = document.visibilityState === 'visible' && document.hasFocus();
-
-  if (isPageVisible) {
-    console.log('⏭️ Page is visible and focused - skipping notification (user can see messages)');
-    return;
-  }
-
-  if (!('Notification' in window)) {
-    console.log('❌ Notifications not supported');
-    return;
-  }
-
-  if (Notification.permission !== 'granted') {
-    console.log('❌ Notification permission not granted');
-    return;
-  }
-
-  console.log('✅ Page NOT visible/focused - showing notification');
-
-  const title = `Nieuw bericht van ${messageData.sender_name}`;
-  const notificationOptions = {
-    body: messageData.message,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    tag: `chat-${messageData.conversation_id}`,
-    vibrate: [200, 100, 200],
-    requireInteraction: false,
-    data: {
-      url: '/chat',
-      conversation_id: messageData.conversation_id
-    }
-  };
-
-  // Use Service Worker for notifications (works better on mobile and PWA)
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    console.log('✅ Showing notification via Service Worker:', title);
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(title, notificationOptions);
-      console.log('✅ Service Worker notification shown!');
-      return;
-    } catch (error) {
-      console.error('Service Worker notification failed:', error);
-      // Fall through to regular notification
-    }
-  }
-
-  // Fallback: Regular browser notification (desktop)
-  console.log('✅ Showing regular notification:', title);
-  try {
-    const notification = new Notification(title, notificationOptions);
-
-    notification.onclick = () => {
-      window.focus();
-      navigateTo('/chat');
-      notification.close();
-    };
-
-    // Auto-close after 5 seconden
-    setTimeout(() => notification.close(), 5000);
-    console.log('✅ Regular notification shown!');
-  } catch (error) {
-    console.error('Regular notification failed:', error);
-  }
-}
-
-// Show mobile in-app notification banner
+// Mobile in-app notification banner (not currently used - global service handles notifications)
 function showMobileNotificationBanner(messageData) {
   console.log('showMobileNotificationBanner called');
 
@@ -274,7 +199,7 @@ function showMobileNotificationBanner(messageData) {
   };
 }
 
-// Setup Pusher
+// Setup chat page (no longer initializes Pusher - handled globally in layout)
 onMounted(async () => {
   // Check if user is logged in
   const token = getAuthToken();
@@ -298,35 +223,17 @@ onMounted(async () => {
     return;
   }
 
-  // Initialiseer Pusher
-  pusher = new Pusher('eca46c4499768c752eed', {
-    cluster: 'eu',
-    authEndpoint: `${apiBase}/chat/pusher_auth.php`,
-    auth: {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }
-  });
-
-  // Debug Pusher
-  pusher.connection.bind('connected', () => {
-    console.log('Pusher connected!');
-  });
-
-  pusher.connection.bind('error', (err) => {
-    console.error('Pusher error:', err);
-  });
-
-  pusher.connection.bind('state_change', (states) => {
-    console.log('Pusher state:', states.current);
-  });
-
   // Laad conversations
   await loadConversations();
 
   // Laad beschikbare users
   await loadAvailableUsers();
+});
+
+// Cleanup: unsubscribe when leaving chat page
+onUnmounted(() => {
+  console.log('💀 Chat component unmounting - unsubscribing from conversation');
+  unsubscribeFromConversation();
 });
 
 async function loadConversations() {
@@ -359,11 +266,6 @@ async function selectConversation(convId) {
     showSidebar.value = false;
   }
 
-  // Unsubscribe van vorige channel
-  if (currentChannel) {
-    pusher.unsubscribe(currentChannel.name);
-  }
-
   // Laad messages
   try {
     const response = await $fetch(
@@ -376,42 +278,20 @@ async function selectConversation(convId) {
     return;
   }
 
-  // Subscribe naar nieuwe messages via Pusher
-  const channelName = `private-conversation-${convId}`;
-  console.log('📡 Subscribing to:', channelName);
+  // Subscribe to conversation using global Pusher service
+  // The global service will handle notifications even when we navigate away
+  console.log('💬 Chat page: subscribing to conversation', convId);
+  subscribeToConversation(convId, (data) => {
+    // This callback is for updating the UI when chat is open
+    console.log('💬 Chat page: received message for UI update:', data);
 
-  currentChannel = pusher.subscribe(channelName);
-
-  currentChannel.bind('pusher:subscription_succeeded', () => {
-    console.log('Successfully subscribed to', channelName);
+    // Add message to the list (only from other users - global service filters this)
+    messages.value.push(data);
+    scrollToBottom();
   });
 
-  currentChannel.bind('pusher:subscription_error', (err) => {
-    console.error('Subscription error:', err);
-  });
-
-  currentChannel.bind('new-message', (data) => {
-    console.log('📨 Received new message:', data);
-    console.log('Current user ID:', currentUserId.value, 'Sender ID:', data.sender_id);
-    console.log('Type check:', typeof currentUserId.value, typeof data.sender_id);
-
-    // Convert both to numbers for comparison
-    const isOwnMessage = parseInt(data.sender_id) === parseInt(currentUserId.value);
-    console.log('Is own message?', isOwnMessage);
-
-    // Voeg nieuw bericht toe (alleen als het niet van jezelf is - want die hebben we al lokaal)
-    if (!isOwnMessage) {
-      messages.value.push(data);
-      scrollToBottom();
-
-      // Toon notificatie als het venster niet in focus is
-      console.log('Calling showNotification...');
-      showNotification(data);
-    } else {
-      console.log('Skipping notification - own message');
-    }
-  });
-
+  // Scroll naar beneden
+  await nextTick();
   scrollToBottom();
 }
 
