@@ -49,6 +49,21 @@
     <div class="tasks-main">
       <div class="tasks-header">
         <h2>{{ currentListName }}</h2>
+
+        <!-- Mobile list selector -->
+        <select
+          v-model="selectedListId"
+          @change="selectList(selectedListId)"
+          class="mobile-list-selector">
+          <option
+            v-for="list in taskLists"
+            :key="list.id"
+            :value="list.id"
+            :style="{ color: list.color }">
+            {{ list.name }} ({{ list.task_count }})
+          </option>
+        </select>
+
         <div class="header-actions">
           <button
             v-if="selectedListId && currentList?.access_type === 'owner'"
@@ -1025,6 +1040,30 @@ watch(showAddTask, (isShown) => {
   gap: 10px;
 }
 
+.mobile-list-selector {
+  display: none;
+  width: 100%;
+  max-width: 300px;
+  padding: 10px 15px;
+  margin: 10px 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.mobile-list-selector:focus {
+  border-color: #fa0101;
+}
+
+.mobile-list-selector option {
+  padding: 10px;
+}
+
 .filter-section {
   background: white;
   padding: 15px 30px;
@@ -1466,6 +1505,10 @@ watch(showAddTask, (isShown) => {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .mobile-list-selector {
+    display: block;
   }
 
   .filter-section {
