@@ -119,51 +119,60 @@ export const usePusher = () => {
   };
 
   const subscribeToConversation = (conversationId, onNewMessage) => {
-    if (!pusherInstance) {
-      console.error('Pusher not initialized');
-      return;
-    }
-
-    // Unsubscribe from previous channel if any
-    if (currentChannel) {
-      pusherInstance.unsubscribe(currentChannel.name);
-      currentChannel = null;
-    }
-
-    const channelName = `private-conversation-${conversationId}`;
-    console.log('🌍 Global service subscribing to:', channelName);
-    currentConversationId = conversationId;
-
-    currentChannel = pusherInstance.subscribe(channelName);
-
-    currentChannel.bind('pusher:subscription_succeeded', () => {
-      console.log('✅ Global service subscribed to', channelName);
-    });
-
-    currentChannel.bind('pusher:subscription_error', (err) => {
-      console.error('❌ Global subscription error:', err);
-    });
-
-    currentChannel.bind('new-message', (data) => {
-      console.log('📨 Global service received message:', data);
-
-      // Check if message is from another user
-      const isOwnMessage = parseInt(data.sender_id) === parseInt(currentUserId);
-      console.log('Is own message?', isOwnMessage, '(sender:', data.sender_id, 'current:', currentUserId, ')');
-
-      if (!isOwnMessage) {
-        // Always show notification (global service handles this)
-        console.log('🔔 Triggering global notification...');
-        showGlobalNotification(data);
-
-        // Also trigger callback if provided (for updating UI when chat is open)
-        if (onNewMessage) {
-          onNewMessage(data);
-        }
-      } else {
-        console.log('⏭️ Skipping own message');
+    // Wait for Pusher to be initialized
+    const trySubscribe = () => {
+      if (!pusherInstance) {
+        console.log('⏳ Pusher not yet initialized, waiting...');
+        setTimeout(trySubscribe, 100);
+        return;
       }
-    });
+
+      console.log('✅ Pusher ready, subscribing now...');
+
+      // Unsubscribe from previous channel if any
+      if (currentChannel) {
+        pusherInstance.unsubscribe(currentChannel.name);
+        currentChannel = null;
+      }
+
+      const channelName = `private-conversation-${conversationId}`;
+      console.log('🌍 Global service subscribing to:', channelName);
+      currentConversationId = conversationId;
+
+      currentChannel = pusherInstance.subscribe(channelName);
+
+      currentChannel.bind('pusher:subscription_succeeded', () => {
+        console.log('✅ Global service subscribed to', channelName);
+      });
+
+      currentChannel.bind('pusher:subscription_error', (err) => {
+        console.error('❌ Global subscription error:', err);
+      });
+
+      currentChannel.bind('new-message', (data) => {
+        console.log('📨 Global service received message:', data);
+
+        // Check if message is from another user
+        const isOwnMessage = parseInt(data.sender_id) === parseInt(currentUserId);
+        console.log('Is own message?', isOwnMessage, '(sender:', data.sender_id, 'current:', currentUserId, ')');
+
+        if (!isOwnMessage) {
+          // Always show notification (global service handles this)
+          console.log('🔔 Triggering global notification...');
+          showGlobalNotification(data);
+
+          // Also trigger callback if provided (for updating UI when chat is open)
+          if (onNewMessage) {
+            onNewMessage(data);
+          }
+        } else {
+          console.log('⏭️ Skipping own message');
+        }
+      });
+    };
+
+    // Start trying to subscribe
+    trySubscribe();
   };
 
   const unsubscribeFromConversation = () => {
