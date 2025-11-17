@@ -231,10 +231,10 @@ onMounted(async () => {
 });
 
 // Cleanup: unsubscribe when leaving chat page
-onUnmounted(() => {
-  console.log('💀 Chat component unmounting - unsubscribing from conversation');
-  unsubscribeFromConversation();
-});
+// DON'T unsubscribe when leaving chat - global service keeps listening for notifications!
+// onUnmounted(() => {
+//   console.log('💀 Chat component unmounting - keeping subscription active');
+// });
 
 async function loadConversations() {
   try {
@@ -416,11 +416,10 @@ function toggleSidebar() {
   showSidebar.value = !showSidebar.value;
 }
 
-onUnmounted(() => {
-  if (pusher) {
-    pusher.disconnect();
-  }
-});
+// DON'T disconnect Pusher - it's managed globally by the layout!
+// onUnmounted(() => {
+//   // pusher is now managed by global service
+// });
 </script>
 
 <style scoped>
