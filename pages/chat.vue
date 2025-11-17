@@ -147,21 +147,24 @@ async function showNotification(messageData) {
   console.log('Document has focus?', document.hasFocus());
   console.log('Notification permission:', Notification.permission);
 
-  // TEMPORARY TEST: Focus check disabled - will show notifications even when window has focus
   // Alleen tonen als window niet in focus is
-  // if (document.hasFocus()) {
-  //   console.log('Window has focus, skipping notification');
-  //   return;
-  // }
-  console.log('⚠️ FOCUS CHECK DISABLED - Testing notifications...');
+  if (document.hasFocus()) {
+    console.log('Window has focus, skipping notification');
+    return;
+  }
 
-  if ('Notification' in window && Notification.permission === 'granted') {
-    console.log('Attempting to show notification...');
+  // Detect mobile device
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  console.log('Is mobile device?', isMobile);
 
-    // Probeer eerst via Service Worker (werkt beter op mobiel)
+  if (isMobile) {
+    // Mobile: Show in-app notification banner (Web Notifications don't work well on mobile browsers)
+    console.log('Showing mobile in-app notification banner...');
+    showMobileNotificationBanner(messageData);
+
+    // Also try Service Worker notification for PWA
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       try {
-        console.log('Trying Service Worker notification...');
         const registration = await navigator.serviceWorker.ready;
         await registration.showNotification(`Nieuw bericht van ${messageData.sender_name}`, {
           body: messageData.message,
@@ -176,14 +179,17 @@ async function showNotification(messageData) {
           }
         });
         console.log('Service Worker notification shown!');
-        return;
       } catch (error) {
-        console.log('Service Worker notification failed, falling back to regular notification:', error);
+        console.log('Service Worker notification failed:', error);
       }
     }
+    return;
+  }
 
-    // Fallback: gewone notificatie (desktop)
-    console.log('Showing regular notification...');
+  // Desktop: Use standard Web Notifications
+  if ('Notification' in window && Notification.permission === 'granted') {
+    console.log('Attempting to show desktop notification...');
+
     const notification = new Notification(`Nieuw bericht van ${messageData.sender_name}`, {
       body: messageData.message,
       icon: '/icon-192.png',
@@ -200,10 +206,60 @@ async function showNotification(messageData) {
 
     // Auto-close na 5 seconden
     setTimeout(() => notification.close(), 5000);
-    console.log('Regular notification shown!');
+    console.log('Desktop notification shown!');
   } else {
     console.log('Notification not supported or permission not granted');
   }
+}
+
+// Show mobile in-app notification banner
+function showMobileNotificationBanner(messageData) {
+  // Remove existing banner if any
+  const existingBanner = document.querySelector('.mobile-notification-banner');
+  if (existingBanner) {
+    existingBanner.remove();
+  }
+
+  // Create notification banner
+  const banner = document.createElement('div');
+  banner.className = 'mobile-notification-banner';
+  banner.innerHTML = `
+    <div class="notification-content">
+      <div class="notification-header">
+        <strong>${messageData.sender_name}</strong>
+        <button class="notification-close">×</button>
+      </div>
+      <div class="notification-body">${messageData.message}</div>
+    </div>
+  `;
+
+  // Add vibration feedback
+  if ('vibrate' in navigator) {
+    navigator.vibrate([200, 100, 200]);
+  }
+
+  // Add to page
+  document.body.appendChild(banner);
+
+  // Close button handler
+  const closeBtn = banner.querySelector('.notification-close');
+  closeBtn.onclick = (e) => {
+    e.stopPropagation();
+    banner.remove();
+  };
+
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    if (banner.parentElement) {
+      banner.classList.add('fade-out');
+      setTimeout(() => banner.remove(), 300);
+    }
+  }, 5000);
+
+  // Click banner to dismiss
+  banner.onclick = () => {
+    banner.remove();
+  };
 }
 
 // Setup Pusher
@@ -900,5 +956,95 @@ onUnmounted(() => {
   .modal h3 {
     font-size: 18px;
   }
+}
+
+/* Mobile notification banner */
+.mobile-notification-banner {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  animation: slideDown 0.3s ease-out;
+  cursor: pointer;
+}
+
+.mobile-notification-banner.fade-out {
+  animation: slideUp 0.3s ease-in;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateX(-50%) translateY(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50%) translateY(-100px);
+    opacity: 0;
+  }
+}
+
+.mobile-notification-banner .notification-content {
+  padding: 16px;
+}
+
+.mobile-notification-banner .notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mobile-notification-banner .notification-header strong {
+  color: #fa0101;
+  font-size: 16px;
+}
+
+.mobile-notification-banner .notification-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.mobile-notification-banner .notification-close:hover {
+  background: #f5f5f5;
+}
+
+.mobile-notification-banner .notification-body {
+  color: #333;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 </style>
