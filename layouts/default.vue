@@ -24,7 +24,7 @@ onMounted(async () => {
   if (token) {
     try {
       // Fetch user info to get user ID
-      const response = await fetch(`${apiBase}/endpoints/get_user_info.php`, {
+      const response = await fetch(`${apiBase}/get_user_info.php`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

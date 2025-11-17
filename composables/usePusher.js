@@ -100,7 +100,7 @@ export const usePusher = () => {
 
     pusherInstance = new Pusher('eca46c4499768c752eed', {
       cluster: 'eu',
-      authEndpoint: `${apiBase}/endpoints/chat/pusher_auth.php`,
+      authEndpoint: `${apiBase}/chat/pusher_auth.php`,
       auth: {
         headers: {
           'Authorization': `Bearer ${token}`
