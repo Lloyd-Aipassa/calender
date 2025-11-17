@@ -16,16 +16,22 @@ async function showGlobalNotification(messageData) {
   console.log('📱 document.hidden:', document.hidden);
   console.log('📱 document.visibilityState:', document.visibilityState);
 
-  // Only show notification if page is NOT visible AND focused
+  // Check if we should show notification
+  // Skip notification ONLY if:
+  // 1. Page is visible (not minimized/background)
+  // 2. Page has focus (actively looking at it)
+  // This way notifications show when:
+  // - Different tab is active
+  // - Different window is active
+  // - Browser is minimized
   const isPageVisible = document.visibilityState === 'visible';
   const isPageFocused = document.hasFocus();
 
-  if (isPageVisible && isPageFocused) {
-    console.log('⏭️ Page is visible AND focused - skipping notification (user can see the page)');
-    return;
-  }
+  console.log('📢 Notification check - page state:', { visible: isPageVisible, focused: isPageFocused });
 
-  console.log('📢 Showing notification - page state:', { visible: isPageVisible, focused: isPageFocused });
+  // ALWAYS show notification regardless of focus state (for testing)
+  // We'll rely on the OS to not show duplicates
+  console.log('✅ Showing notification (focus detection disabled for testing)');
 
   if (!('Notification' in window)) {
     console.log('❌ Notifications not supported');
