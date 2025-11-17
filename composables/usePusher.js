@@ -14,16 +14,16 @@ async function showGlobalNotification(messageData) {
   console.log('📱 document.hidden:', document.hidden);
   console.log('📱 document.visibilityState:', document.visibilityState);
 
-  // TEMPORARY: ALWAYS show notifications for testing
-  // TODO: Re-enable focus check after testing
-  // const isPageVisible = document.visibilityState === 'visible';
-  // const isPageFocused = document.hasFocus();
-  // if (isPageVisible && isPageFocused) {
-  //   console.log('⏭️ Page is visible AND focused - skipping notification');
-  //   return;
-  // }
+  // Only show notification if page is NOT visible AND focused
+  const isPageVisible = document.visibilityState === 'visible';
+  const isPageFocused = document.hasFocus();
 
-  console.log('🔥 TESTING MODE: Always showing notifications (focus check disabled)');
+  if (isPageVisible && isPageFocused) {
+    console.log('⏭️ Page is visible AND focused - skipping notification (user can see the page)');
+    return;
+  }
+
+  console.log('📢 Showing notification - page state:', { visible: isPageVisible, focused: isPageFocused });
 
   if (!('Notification' in window)) {
     console.log('❌ Notifications not supported');
@@ -49,42 +49,40 @@ async function showGlobalNotification(messageData) {
     }
   };
 
-  // TESTING: Use regular browser notification first (easier to debug)
-  console.log('🔔 Showing regular browser notification:', title);
+  // Desktop: Direct notification (works best and is proven to work)
+  // Mobile: Try Service Worker first, fallback to direct
+  console.log('🔔 Showing notification:', title);
+
+  // Try Service Worker first (better for mobile/PWA)
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(title, notificationOptions);
+      console.log('✅ Service Worker notification shown!');
+      return; // Success, we're done
+    } catch (error) {
+      console.warn('⚠️ Service Worker failed, trying direct notification:', error);
+      // Fall through to direct notification
+    }
+  }
+
+  // Fallback: Direct notification (works on desktop)
   try {
     const notification = new Notification(title, notificationOptions);
-
-    console.log('✅ Notification object created!', notification);
+    console.log('✅ Direct notification shown!');
 
     notification.onclick = () => {
-      console.log('Notification clicked!');
+      console.log('💬 Notification clicked!');
       window.focus();
       window.location.href = '/chat';
       notification.close();
     };
 
-    notification.onerror = (error) => {
-      console.error('❌ Notification error:', error);
-    };
-
-    notification.onshow = () => {
-      console.log('✅ Notification is now showing!');
-    };
-
-    notification.onclose = () => {
-      console.log('Notification closed');
-    };
-
     // Auto-close after 5 seconds
-    setTimeout(() => {
-      console.log('Auto-closing notification...');
-      notification.close();
-    }, 5000);
+    setTimeout(() => notification.close(), 5000);
 
   } catch (error) {
-    console.error('❌ Failed to create notification:', error);
-    console.error('Error name:', error.name);
-    console.error('Error message:', error.message);
+    console.error('❌ All notification methods failed:', error);
   }
 }
 
