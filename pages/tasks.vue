@@ -452,7 +452,7 @@ async function fetchLists() {
   try {
     const response = await fetch(`${apiBase}/get_task_lists.php`, {
       headers: {
-        Authorization: getAuthToken(),
+        Authorization: `Bearer ${getAuthToken()}`,
       },
     });
 
@@ -474,7 +474,7 @@ async function fetchTasks() {
 
     const response = await fetch(url, {
       headers: {
-        Authorization: getAuthToken(),
+        Authorization: `Bearer ${getAuthToken()}`,
       },
     });
 
@@ -499,7 +499,7 @@ async function createList() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: getAuthToken(),
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify(newListForm.value),
     });
@@ -524,7 +524,7 @@ async function updateList() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: getAuthToken(),
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify({
         id: editingList.value.id,
@@ -555,7 +555,7 @@ async function deleteList() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: getAuthToken(),
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify({ id: editingList.value.id }),
     });
@@ -599,7 +599,7 @@ async function fetchListShares() {
       `${apiBase}/get_list_shares.php?list_id=${selectedListId.value}`,
       {
         headers: {
-          Authorization: getAuthToken(),
+          Authorization: `Bearer ${getAuthToken()}`,
         },
       }
     );
@@ -619,7 +619,7 @@ async function shareList() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: getAuthToken(),
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify({
         list_id: selectedListId.value,
@@ -655,7 +655,7 @@ async function unshareList(sharedWithUserId) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: getAuthToken(),
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify({
         list_id: selectedListId.value,
@@ -690,7 +690,7 @@ async function saveTask() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: getAuthToken(),
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify(payload),
     });
@@ -715,7 +715,7 @@ async function toggleTask(task) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: getAuthToken(),
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify({
         id: task.id,
@@ -760,7 +760,7 @@ async function confirmDelete(task) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: getAuthToken(),
+        Authorization: `Bearer ${getAuthToken()}`,
       },
       body: JSON.stringify({ id: task.id }),
     });
@@ -792,7 +792,7 @@ async function deleteAllCompleted() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: getAuthToken(),
+            Authorization: `Bearer ${getAuthToken()}`,
           },
           body: JSON.stringify({ id: task.id }),
         });
