@@ -6,6 +6,7 @@ let currentChannel = null;
 let currentUserId = null;
 let currentConversationId = null;
 let currentCallback = null; // Store the current UI update callback
+let swRegistration = null; // Service Worker registration for notifications
 
 // Show notification function - works globally
 async function showGlobalNotification(messageData) {
@@ -49,40 +50,21 @@ async function showGlobalNotification(messageData) {
     }
   };
 
-  // Desktop: Direct notification (works best and is proven to work)
-  // Mobile: Try Service Worker first, fallback to direct
-  console.log('🔔 Showing notification:', title);
-
-  // Try Service Worker first (better for mobile/PWA)
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+  // EXACT COPY of Calendar.vue notification logic
+  // Gebruik Service Worker voor notificaties (werkt beter op mobiel)
+  if (swRegistration && swRegistration.showNotification) {
+    console.log('✅ Toon notificatie via Service Worker:', title);
     try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(title, notificationOptions);
-      console.log('✅ Service Worker notification shown!');
-      return; // Success, we're done
+      await swRegistration.showNotification(title, notificationOptions);
     } catch (error) {
-      console.warn('⚠️ Service Worker failed, trying direct notification:', error);
-      // Fall through to direct notification
+      console.error('Service Worker notification failed:', error);
+      // Fallback naar normale notificatie
+      new Notification(title, notificationOptions);
     }
-  }
-
-  // Fallback: Direct notification (works on desktop)
-  try {
-    const notification = new Notification(title, notificationOptions);
-    console.log('✅ Direct notification shown!');
-
-    notification.onclick = () => {
-      console.log('💬 Notification clicked!');
-      window.focus();
-      window.location.href = '/chat';
-      notification.close();
-    };
-
-    // Auto-close after 5 seconds
-    setTimeout(() => notification.close(), 5000);
-
-  } catch (error) {
-    console.error('❌ All notification methods failed:', error);
+  } else {
+    // Fallback voor desktop browsers
+    console.log('✅ Toon notificatie direct:', title);
+    new Notification(title, notificationOptions);
   }
 }
 
@@ -95,6 +77,17 @@ export const usePusher = () => {
 
     console.log('Initializing global Pusher service...');
     currentUserId = userId;
+
+    // Register Service Worker (same as Calendar.vue)
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        swRegistration = registration;
+        console.log('✅ Service Worker registered for notifications');
+      } catch (error) {
+        console.error('Service Worker registration failed:', error);
+      }
+    }
 
     const token = localStorage.getItem('authToken');
     if (!token) {
