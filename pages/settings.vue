@@ -204,10 +204,9 @@ const debugEnabled = ref(false);
 
 // Check for success message from callback
 onMounted(() => {
-  // Check if Eruda is already loaded
-  if (window.eruda) {
-    debugEnabled.value = true;
-  }
+  // Load debug state from localStorage
+  debugEnabled.value = localStorage.getItem('debugEnabled') === 'true';
+
   const route = useRoute();
   if (route.query.google_connected === '1') {
     successMessage.value = 'Google Calendar succesvol gekoppeld!';
@@ -415,6 +414,9 @@ function getStatusText(status) {
 
 // Developer Tools functions
 function toggleDebug() {
+  // Save to localStorage
+  localStorage.setItem('debugEnabled', debugEnabled.value.toString());
+
   if (debugEnabled.value) {
     // Enable Eruda
     if (!window.eruda) {

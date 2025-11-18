@@ -5,15 +5,6 @@
     <main class="main-content">
       <slot />
     </main>
-
-    <!-- Debug button for mobile debugging (iPhone/Android) -->
-    <button
-      @click="enableDebug"
-      class="debug-button"
-      title="Enable mobile debug console"
-    >
-      🐛
-    </button>
   </div>
 </template>
 
@@ -28,18 +19,17 @@ const apiBase = config.public.apiBaseUrl;
 const { initPusher } = usePusher();
 const { linkUserToOneSignal } = useOneSignal();
 
-// Enable Eruda debug console for mobile
-const enableDebug = () => {
-  const script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/eruda';
-  document.body.appendChild(script);
-  script.onload = () => {
-    window.eruda.init();
-    console.log('✅ Eruda debug console enabled!');
-  };
-};
-
 onMounted(async () => {
+  // Auto-enable Eruda if it was enabled in settings
+  if (localStorage.getItem('debugEnabled') === 'true') {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+    document.body.appendChild(script);
+    script.onload = () => {
+      window.eruda.init();
+      console.log('✅ Eruda debug console auto-enabled from localStorage!');
+    };
+  }
   console.log('🚀 default.vue mounted - starting initialization');
 
   // Get current user from auth token
@@ -162,29 +152,5 @@ body {
   .main-content {
     padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
-}
-
-/* Debug button */
-.debug-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 9999;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: #ff4444;
-  color: white;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.debug-button:active {
-  transform: scale(0.95);
 }
 </style>
