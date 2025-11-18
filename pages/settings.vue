@@ -129,6 +129,45 @@
         </div>
       </div>
 
+      <!-- Developer Tools sectie -->
+      <div class="section">
+        <h3>Developer Tools</h3>
+        <p class="description">
+          Handige tools voor debugging en app beheer.
+        </p>
+
+        <div class="tools-list">
+          <!-- Debug Console Toggle -->
+          <div class="tool-item">
+            <div class="tool-info">
+              <div class="icon">🐛</div>
+              <div>
+                <h4>Debug Console</h4>
+                <p class="tool-description">Toon debug console voor mobiele debugging</p>
+              </div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" v-model="debugEnabled" @change="toggleDebug">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Refresh Button -->
+          <div class="tool-item">
+            <div class="tool-info">
+              <div class="icon">🔄</div>
+              <div>
+                <h4>App Verversen</h4>
+                <p class="tool-description">Herlaad de hele applicatie (handig voor iOS)</p>
+              </div>
+            </div>
+            <button @click="refreshApp" class="btn btn-secondary">
+              Verversen
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div v-if="error" class="error-message">
         {{ error }}
       </div>
@@ -160,8 +199,15 @@ const inviteLinkInput = ref(null);
 const sharedByMe = ref([]);
 const sentInvites = ref([]);
 
+// Developer Tools
+const debugEnabled = ref(false);
+
 // Check for success message from callback
 onMounted(() => {
+  // Check if Eruda is already loaded
+  if (window.eruda) {
+    debugEnabled.value = true;
+  }
   const route = useRoute();
   if (route.query.google_connected === '1') {
     successMessage.value = 'Google Calendar succesvol gekoppeld!';
@@ -365,6 +411,34 @@ function getStatusText(status) {
     cancelled: 'Geannuleerd'
   };
   return statusMap[status] || status;
+}
+
+// Developer Tools functions
+function toggleDebug() {
+  if (debugEnabled.value) {
+    // Enable Eruda
+    if (!window.eruda) {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+      document.body.appendChild(script);
+      script.onload = () => {
+        window.eruda.init();
+        console.log('✅ Eruda debug console enabled from settings!');
+      };
+    } else {
+      window.eruda.show();
+    }
+  } else {
+    // Disable Eruda
+    if (window.eruda) {
+      window.eruda.hide();
+    }
+  }
+}
+
+function refreshApp() {
+  // Full page reload (clears cache and reloads everything)
+  window.location.reload(true);
 }
 </script>
 
@@ -630,5 +704,86 @@ h2 {
 .btn-small {
   padding: 6px 12px;
   font-size: 14px;
+}
+
+/* Developer Tools styles */
+.tools-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.tool-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.tool-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.tool-info h4 {
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.tool-description {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #4caf50;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
 }
 </style>
