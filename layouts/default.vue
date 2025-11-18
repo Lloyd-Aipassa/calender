@@ -40,11 +40,21 @@ const enableDebug = () => {
 };
 
 onMounted(async () => {
+  console.log('🚀 default.vue mounted - starting initialization');
+
   // Get current user from auth token
   const token = localStorage.getItem('authToken');
+  console.log('🔑 Auth token found:', !!token);
+
+  if (!token) {
+    console.error('❌ No auth token - cannot initialize Pusher');
+    return;
+  }
 
   if (token) {
     try {
+      console.log('📡 Fetching user info from:', `${apiBase}/get_user_info.php`);
+
       // Fetch user info to get user ID
       const response = await fetch(`${apiBase}/get_user_info.php`, {
         headers: {
@@ -52,19 +62,29 @@ onMounted(async () => {
         }
       });
 
+      console.log('📡 User info response status:', response.status, response.ok);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('📡 User info data:', data);
+
         if (data.success && data.user) {
           console.log('🌍 Initializing global Pusher service for user:', data.user.id);
-          await initPusher(data.user.id, apiBase);
+          const result = await initPusher(data.user.id, apiBase);
+          console.log('🌍 Pusher init result:', result);
 
           // Link user to OneSignal for push notifications
           console.log('🔔 Linking user to OneSignal...');
           await linkUserToOneSignal(data.user.id);
+        } else {
+          console.error('❌ User info response invalid:', data);
         }
+      } else {
+        console.error('❌ User info fetch failed:', response.status);
       }
     } catch (error) {
-      console.error('Failed to initialize global Pusher:', error);
+      console.error('❌ Failed to initialize global Pusher:', error);
+      console.error('Error stack:', error.stack);
     }
   }
 });
