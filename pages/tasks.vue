@@ -802,6 +802,11 @@ async function confirmDelete(task) {
     return;
   }
 
+  console.log('Deleting task:', task);
+  console.log('Task list ID:', task.task_list_id);
+  console.log('Task type:', task.task_type);
+  console.log('Permission level:', task.permission_level);
+
   try {
     const response = await fetch(`${apiBase}/delete_task.php`, {
       method: 'POST',
