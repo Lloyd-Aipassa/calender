@@ -812,7 +812,11 @@ async function confirmDelete(task) {
       body: JSON.stringify({ id: task.id }),
     });
 
-    if (!response.ok) throw new Error('Failed to delete task');
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Delete task error response:', errorData);
+      throw new Error(errorData.error || 'Failed to delete task');
+    }
 
     const data = await response.json();
     if (data.success) {
@@ -821,7 +825,7 @@ async function confirmDelete(task) {
     }
   } catch (error) {
     console.error('Error deleting task:', error);
-    alert('Fout bij verwijderen taak');
+    alert(`Fout bij verwijderen taak: ${error.message}`);
   }
 }
 
