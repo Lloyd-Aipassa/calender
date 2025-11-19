@@ -201,6 +201,7 @@ function logout() {
   .nav-link.active {
     background: #fa010100;
     color: #fa0101;
+    font-size: 14px;
   }
 
   .nav-link.active:hover {

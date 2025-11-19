@@ -2,7 +2,8 @@
   <div class="calendar-container">
     <div class="calendar-header">
       <div class="header-left">
-        <h2>Gedeelde Agenda</h2>
+        <!--     <h2>Gedeelde Agenda</h2> -->
+
         <p v-if="userName" class="user-name">{{ userName }}</p>
       </div>
       <div class="header-actions">
@@ -176,6 +177,19 @@
             <label>Beschrijving:</label>
             <textarea v-model="eventForm.description" rows="3"></textarea>
           </div>
+          <div class="form-group">
+            <label>Herinnering:</label>
+            <select v-model="eventForm.reminder_minutes">
+              <option :value="null">Geen herinnering</option>
+              <option :value="0">Op het moment van het event</option>
+              <option :value="15">15 minuten van tevoren</option>
+              <option :value="30">30 minuten van tevoren</option>
+              <option :value="60">1 uur van tevoren</option>
+              <option :value="1440">1 dag van tevoren</option>
+              <option :value="2880">2 dagen van tevoren</option>
+              <option :value="10080">1 week van tevoren</option>
+            </select>
+          </div>
           <div class="modal-actions">
             <button v-if="editingEvent" type="button" @click="deleteEvent" class="btn-danger">
               Verwijderen
@@ -211,6 +225,7 @@ const eventForm = ref({
   date: '',
   time: '',
   description: '',
+  reminder_minutes: null,
 });
 
 // Constants
@@ -419,15 +434,12 @@ function nextPeriod() {
 }
 
 function selectDate(day) {
-  // Use the day.date directly instead of parsing it again
-  eventForm.value = {
-    title: '',
-    date: day.date, // This is already in YYYY-MM-DD format
-    time: '09:00',
-    description: '',
-  };
-  editingEvent.value = null;
-  showAddEvent.value = true;
+  // Parse the date string to set currentDate
+  const [year, month, dayNum] = day.date.split('-').map(Number);
+  currentDate.value = new Date(year, month - 1, dayNum);
+
+  // Switch to day view
+  currentView.value = 'day';
 }
 
 function selectTimeSlot(date, hour) {
@@ -480,7 +492,7 @@ function getEventsForDayHour(date, hour) {
 function closeModal() {
   showAddEvent.value = false;
   editingEvent.value = null;
-  eventForm.value = { title: '', date: '', time: '', description: '' };
+  eventForm.value = { title: '', date: '', time: '', description: '', reminder_minutes: null };
 }
 
 function goToSettings() {
@@ -885,11 +897,25 @@ async function setupPusher() {
 
 // Load events on mount
 onMounted(async () => {
+  // Check if user is authenticated before loading
+  const token = getAuthToken();
+  if (!token) {
+    console.log('❌ No auth token found, skipping calendar initialization');
+    return;
+  }
+
+  // Validate token has user info
+  const userInfo = getUserInfoFromToken();
+  if (!userInfo || (!userInfo.user_id && !userInfo.id)) {
+    console.log('❌ Invalid token, skipping calendar initialization');
+    return;
+  }
+
   // Get user info from API
   try {
     const response = await $fetch(`${apiBase}/get_user_info.php`, {
       headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     if (response.success && response.user) {
@@ -898,7 +924,6 @@ onMounted(async () => {
   } catch (error) {
     // Silently fail - API not available yet
     // Fallback: try to decode token
-    const userInfo = getUserInfoFromToken();
     if (userInfo) {
       userName.value = userInfo.name || userInfo.email || 'Gebruiker';
     } else {
@@ -925,15 +950,35 @@ onMounted(async () => {
 
   // Auto-refresh events every 30 seconds to detect changes from Google Calendar
   // (dit is nu minder nodig door Pusher, maar houden voor extra zekerheid)
-  setInterval(async () => {
+  const refreshInterval = setInterval(async () => {
+    // Check if still authenticated before refreshing
+    const currentToken = getAuthToken();
+    if (!currentToken) {
+      console.log('No token found, stopping auto-refresh');
+      clearInterval(refreshInterval);
+      return;
+    }
+
     try {
       const loadedEvents = await loadEventsAPI();
       events.value = loadedEvents;
       console.log('Events auto-refreshed');
     } catch (error) {
       console.error('Auto-refresh failed:', error);
+      // If 401 error, stop the interval
+      if (error.statusCode === 401) {
+        console.log('Unauthorized, stopping auto-refresh');
+        clearInterval(refreshInterval);
+      }
     }
   }, 30000); // 30 seconds
+});
+
+// Cleanup interval on unmount
+onUnmounted(() => {
+  if (pusherInstance) {
+    pusherInstance.disconnect();
+  }
 });
 </script>
 
@@ -942,6 +987,8 @@ onMounted(async () => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  padding-top: max(20px, env(safe-area-inset-top));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -962,18 +1009,24 @@ onMounted(async () => {
   margin: 0;
   color: #333;
 }
+.calendar-header button {
+  padding: 5px;
+  background: #15572400;
+}
 
 .calendar-content {
   box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
   box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   border-radius: 15px;
+  padding: 15px;
+  background-color: #fff;
 }
 
 .user-name {
   margin: 0;
-  color: #666;
-  font-size: 14px;
-  font-weight: 500;
+  color: #1d1d1d;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .header-actions {
@@ -983,17 +1036,17 @@ onMounted(async () => {
 
 /* Invitations Banner */
 .invitations-banner {
-  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-  border: 1px solid #2196f3;
+  background: linear-gradient(135deg, #ffe5e5, #ffcccc);
+  border: 1px solid #fa0101;
   border-radius: 8px;
   padding: 15px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.1);
+  box-shadow: 0 2px 4px rgba(250, 1, 1, 0.1);
 }
 
 .invitation-header h4 {
   margin: 0 0 10px 0;
-  color: #1976d2;
+  color: #fa0101;
   font-size: 16px;
 }
 
@@ -1101,8 +1154,8 @@ onMounted(async () => {
 .share-permission {
   font-size: 12px;
   padding: 2px 6px;
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #ffe5e5;
+  color: #fa0101;
   border-radius: 12px;
   display: inline-block;
   width: fit-content;
@@ -1195,13 +1248,13 @@ select {
 }
 
 .view-btn.active {
-  background: #007bff;
+  background: #fa0101;
   color: white;
-  border-color: #007bff;
+  border-color: #fa0101;
 }
 
 .nav-btn {
-  background: #007bff;
+  background: #fa0101;
   color: white;
   border: none;
   width: 40px;
@@ -1215,7 +1268,7 @@ select {
 }
 
 .nav-btn:hover {
-  background: #0056b3;
+  background: #c80101;
 }
 
 .calendar-nav h3 {
@@ -1228,7 +1281,7 @@ select {
 
 /* Month View */
 .calendar-grid {
-  border: 1px solid #ddd;
+  /* border: 1px solid #ddd; */
   border-radius: 8px;
   overflow: hidden;
 }
@@ -1236,7 +1289,7 @@ select {
 .calendar-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  background: #f8f9fa;
+  background: white;
 }
 
 .weekday {
@@ -1244,7 +1297,7 @@ select {
   text-align: center;
   font-weight: 600;
   color: #666;
-  border-right: 1px solid #ddd;
+  /* border-right: 1px solid #ddd; */
 }
 
 .weekday:last-child {
@@ -1258,13 +1311,16 @@ select {
 
 .calendar-day {
   min-height: 120px;
-  border-right: 1px solid #eee;
-  border-bottom: 1px solid #eee;
+  max-height: 120px;
+  /* border-right: 1px solid #eee;
+  border-bottom: 1px solid #eee; */
   padding: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
   display: flex;
   flex-direction: column;
+  background-color: white;
+  overflow: hidden;
 }
 
 .calendar-day:hover {
@@ -1276,7 +1332,7 @@ select {
 }
 
 .calendar-day.other-month {
-  background-color: #f9f9f9;
+  background-color: white;
   color: #ccc;
 }
 
@@ -1285,17 +1341,23 @@ select {
 }
 
 .calendar-day.today {
-  background-color: #e3f2fd;
+  background-color: white;
+}
+
+.calendar-day.today .day-number {
+  color: #fa0101;
 }
 
 .calendar-day.weekend {
-  background-color: #fafafa;
+  background-color: white;
 }
 
 .day-number {
   font-weight: 600;
   margin-bottom: 6px;
   font-size: 14px;
+  display: flex;
+  justify-content: center;
 }
 
 .events-container {
@@ -1306,9 +1368,9 @@ select {
 }
 
 .event {
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background: linear-gradient(135deg, #fa0101, #c80101);
   color: white;
-  padding: 2px 6px;
+  padding: 2px 2px;
   border-radius: 3px;
   font-size: 11px;
   cursor: pointer;
@@ -1322,17 +1384,17 @@ select {
 }
 
 .event:hover {
-  background: linear-gradient(135deg, #0056b3, #004085);
+  background: linear-gradient(135deg, #c80101, #a00101);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .event.shared-event {
-  background: linear-gradient(135deg, #28a745, #1e7e34);
+  background: linear-gradient(135deg, #fa0101, #c80101);
 }
 
 .event.shared-event:hover {
-  background: linear-gradient(135deg, #1e7e34, #155724);
+  background: linear-gradient(135deg, #c80101, #a00101);
 }
 
 .event-time {
@@ -1409,8 +1471,8 @@ select {
 }
 
 .day-date.today {
-  color: #007bff;
-  background: #e3f2fd;
+  color: #fa0101;
+  background: white;
   border-radius: 50%;
   width: 30px;
   height: 30px;
@@ -1456,7 +1518,7 @@ select {
 }
 
 .week-event {
-  background: #007bff;
+  background: #fa0101;
   color: white;
   padding: 2px 6px;
   border-radius: 3px;
@@ -1466,7 +1528,7 @@ select {
 }
 
 .week-event:hover {
-  background: #0056b3;
+  background: #c80101;
 }
 
 .week-event.shared-event {
@@ -1528,7 +1590,7 @@ select {
 }
 
 .day-event {
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background: linear-gradient(135deg, #fa0101, #c80101);
   color: white;
   padding: 8px 12px;
   border-radius: 6px;
@@ -1576,7 +1638,7 @@ select {
 
 /* Button styles */
 .btn-primary {
-  background-color: #007bff00;
+  background-color: #fa0101a0;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1586,11 +1648,11 @@ select {
 }
 
 .btn-primary:hover {
-  background-color: #0056b3;
+  background-color: #c80101;
 }
 
 .btn-secondary {
-  background-color: #6c757d00;
+  background-color: #6c757d47;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1680,7 +1742,7 @@ select {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: #fa0101;
 }
 
 .modal-actions {
