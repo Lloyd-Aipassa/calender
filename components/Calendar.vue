@@ -1370,7 +1370,7 @@ select {
 .event {
   background: linear-gradient(135deg, #fa0101, #c80101);
   color: white;
-  padding: 2px 6px;
+  padding: 2px 2px;
   border-radius: 3px;
   font-size: 11px;
   cursor: pointer;
@@ -1390,11 +1390,11 @@ select {
 }
 
 .event.shared-event {
-  background: linear-gradient(135deg, #28a745, #1e7e34);
+  background: linear-gradient(135deg, #fa0101, #c80101);
 }
 
 .event.shared-event:hover {
-  background: linear-gradient(135deg, #1e7e34, #155724);
+  background: linear-gradient(135deg, #c80101, #a00101);
 }
 
 .event-time {
