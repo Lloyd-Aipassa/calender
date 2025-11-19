@@ -4,7 +4,12 @@
     <div class="tasks-sidebar">
       <div class="sidebar-header">
         <h3>Mijn Lijsten</h3>
-        <button @click="showNewListModal = true" class="btn-icon" title="Nieuwe lijst">+</button>
+        <div class="sidebar-actions">
+          <button @click="goToSettings" class="btn-icon" title="Instellingen">
+            <img src="/svg/gear.svg" width="20" alt="Instellingen" />
+          </button>
+          <button @click="showNewListModal = true" class="btn-icon" title="Nieuwe lijst">+</button>
+        </div>
       </div>
 
       <div class="lists-container">
@@ -135,11 +140,11 @@
             </div>
             <div v-if="task.description" class="task-description">{{ task.description }}</div>
             <div class="task-meta">
-              <span v-if="task.due_date" class="task-due-date">
+              <span v-if="task.due_date && shouldShowDueDate(task)" class="task-due-date">
                 <img src="/svg/calendar.svg" width="15" alt="" />
                 {{ formatDate(task.due_date) }}
               </span>
-              <span :class="['task-priority', `priority-${task.priority}`]">
+              <span v-if="shouldShowPriority(task)" :class="['task-priority', `priority-${task.priority}`]">
                 {{ priorityLabel(task.priority) }}
               </span>
               <span v-if="task.list_name && !selectedListId" class="task-list-badge">
@@ -316,7 +321,7 @@
           </div>
 
           <div class="form-row">
-            <div class="form-group">
+            <div v-if="showPriorityField" class="form-group">
               <label>Prioriteit:</label>
               <select v-model="taskForm.priority">
                 <option value="low">Laag</option>
@@ -325,7 +330,7 @@
               </select>
             </div>
 
-            <div class="form-group">
+            <div v-if="showDueDateField" class="form-group">
               <label>Vervaldatum:</label>
               <input v-model="taskForm.due_date" type="date" />
             </div>
@@ -432,6 +437,9 @@ const taskForm = ref({
 const imageInput = ref(null);
 const imagePreview = ref(null);
 const selectedImageFile = ref(null);
+
+// List settings from localStorage
+const listSettings = ref({});
 const showImagePopup = ref(false);
 const popupImageUrl = ref('');
 
@@ -500,6 +508,33 @@ const availableUsers = computed(() => {
   const sharedUserIds = listShares.value.map(s => s.shared_with_user_id);
   return allUsers.value.filter(u => !sharedUserIds.includes(u.id));
 });
+
+// Check if priority field should be shown based on selected list settings
+const showPriorityField = computed(() => {
+  if (!taskForm.value.task_list_id) return true; // Show by default if no list selected
+  const settings = listSettings.value[taskForm.value.task_list_id];
+  return settings?.showPriority !== false; // Show by default if no settings
+});
+
+// Check if due date field should be shown based on selected list settings
+const showDueDateField = computed(() => {
+  if (!taskForm.value.task_list_id) return true; // Show by default if no list selected
+  const settings = listSettings.value[taskForm.value.task_list_id];
+  return settings?.showDueDate !== false; // Show by default if no settings
+});
+
+// Helper functions to check if fields should be shown on task cards
+function shouldShowPriority(task) {
+  if (!task.task_list_id) return true;
+  const settings = listSettings.value[task.task_list_id];
+  return settings?.showPriority !== false;
+}
+
+function shouldShowDueDate(task) {
+  if (!task.task_list_id) return true;
+  const settings = listSettings.value[task.task_list_id];
+  return settings?.showDueDate !== false;
+}
 
 // Helper functions
 function getAuthToken() {
@@ -1000,6 +1035,10 @@ function closeImagePopup() {
   popupImageUrl.value = '';
 }
 
+function goToSettings() {
+  navigateTo('/task-settings');
+}
+
 function closeNewListModal() {
   showNewListModal.value = false;
   newListForm.value = {
@@ -1029,6 +1068,12 @@ onMounted(async () => {
   if (!token) {
     navigateTo('/login');
     return;
+  }
+
+  // Load list settings from localStorage
+  const savedSettings = localStorage.getItem('taskListSettings');
+  if (savedSettings) {
+    listSettings.value = JSON.parse(savedSettings);
   }
 
   await fetchLists();
@@ -1081,6 +1126,11 @@ watch(showAddTask, (isShown) => {
   margin: 0;
   font-size: 18px;
   color: #333;
+}
+
+.sidebar-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .lists-container {
