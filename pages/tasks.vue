@@ -124,7 +124,15 @@
           </div>
 
           <div class="task-content" @click="editTask(task)">
-            <div class="task-title">{{ task.title }}</div>
+            <div class="task-header-row">
+              <div class="task-title">{{ task.title }}</div>
+              <img
+                v-if="task.image_path"
+                :src="`${apiBase.replace('/endpoints', '')}/${task.image_path}`"
+                alt="Task image"
+                class="task-thumbnail"
+                @click.stop="openImagePopup(`${apiBase.replace('/endpoints', '')}/${task.image_path}`)" />
+            </div>
             <div v-if="task.description" class="task-description">{{ task.description }}</div>
             <div class="task-meta">
               <span v-if="task.due_date" class="task-due-date">
@@ -268,6 +276,36 @@
           </div>
 
           <div class="form-group">
+            <label>Afbeelding:</label>
+            <div class="image-upload-container">
+              <input
+                ref="imageInput"
+                type="file"
+                accept="image/*"
+                @change="handleImageSelect"
+                class="image-input" />
+              <button
+                type="button"
+                @click="$refs.imageInput.click()"
+                class="btn-upload">
+                📷 Afbeelding kiezen
+              </button>
+              <div v-if="taskForm.image_path || imagePreview" class="image-preview">
+                <img
+                  :src="imagePreview || `${apiBase.replace('/endpoints', '')}/${taskForm.image_path}`"
+                  alt="Task image"
+                  @click="openImagePopup(imagePreview || `${apiBase.replace('/endpoints', '')}/${taskForm.image_path}`)" />
+                <button
+                  type="button"
+                  @click="removeImage"
+                  class="btn-remove-image">
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
             <label>Takenlijst:</label>
             <select v-model="taskForm.task_list_id" required>
               <option :value="null" disabled>Selecteer een lijst</option>
@@ -300,6 +338,14 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Image Popup Modal -->
+    <div v-if="showImagePopup" class="image-popup-overlay" @click="closeImagePopup">
+      <div class="image-popup">
+        <button @click="closeImagePopup" class="close-popup">✕</button>
+        <img :src="popupImageUrl" alt="Full size image" />
       </div>
     </div>
 
@@ -376,10 +422,18 @@ const shareListForm = ref({
 const taskForm = ref({
   title: '',
   description: '',
+  image_path: null,
   priority: 'medium',
   due_date: '',
   task_list_id: null,
 });
+
+// Image upload state
+const imageInput = ref(null);
+const imagePreview = ref(null);
+const selectedImageFile = ref(null);
+const showImagePopup = ref(false);
+const popupImageUrl = ref('');
 
 const colorOptions = [
   '#fa0101',
@@ -725,6 +779,25 @@ async function unshareList(sharedWithUserId) {
 // Task functions
 async function saveTask() {
   try {
+    // First upload image if selected
+    if (selectedImageFile.value) {
+      const formData = new FormData();
+      formData.append('image', selectedImageFile.value);
+
+      const uploadResponse = await fetch(`${apiBase}/upload_task_image.php`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+        body: formData,
+      });
+
+      if (uploadResponse.ok) {
+        const uploadData = await uploadResponse.json();
+        taskForm.value.image_path = uploadData.image_path;
+      }
+    }
+
     const url = editingTask.value
       ? `${apiBase}/update_task.php`
       : `${apiBase}/create_task.php`;
@@ -790,10 +863,13 @@ function editTask(task) {
   taskForm.value = {
     title: task.title,
     description: task.description || '',
+    image_path: task.image_path || null,
     priority: task.priority,
     due_date: task.due_date || '',
     task_list_id: task.task_list_id,
   };
+  imagePreview.value = null;
+  selectedImageFile.value = null;
   showAddTask.value = true;
 }
 
@@ -869,10 +945,59 @@ function closeModal() {
   taskForm.value = {
     title: '',
     description: '',
+    image_path: null,
     priority: 'medium',
     due_date: '',
     task_list_id: selectedListId.value,
   };
+  imagePreview.value = null;
+  selectedImageFile.value = null;
+}
+
+// Image handling functions
+function handleImageSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert('Alleen afbeeldingen zijn toegestaan');
+    return;
+  }
+
+  // Validate file size (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Afbeelding te groot (max 5MB)');
+    return;
+  }
+
+  selectedImageFile.value = file;
+
+  // Create preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    imagePreview.value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage() {
+  taskForm.value.image_path = null;
+  imagePreview.value = null;
+  selectedImageFile.value = null;
+  if (imageInput.value) {
+    imageInput.value.value = '';
+  }
+}
+
+function openImagePopup(imageUrl) {
+  popupImageUrl.value = imageUrl;
+  showImagePopup.value = true;
+}
+
+function closeImagePopup() {
+  showImagePopup.value = false;
+  popupImageUrl.value = '';
 }
 
 function closeNewListModal() {
@@ -1411,6 +1536,144 @@ watch(showAddTask, (isShown) => {
   gap: 10px;
   justify-content: flex-end;
   margin-top: 20px;
+}
+
+/* Image upload styles */
+.image-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.image-input {
+  display: none;
+}
+
+.btn-upload {
+  padding: 10px 15px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  align-self: flex-start;
+}
+
+.btn-upload:hover {
+  background: #45a049;
+}
+
+.image-preview {
+  position: relative;
+  width: fit-content;
+}
+
+.image-preview img {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: 4px;
+  border: 2px solid #ddd;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.image-preview img:hover {
+  transform: scale(1.05);
+}
+
+.btn-remove-image {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f44336;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-remove-image:hover {
+  background: #d32f2f;
+}
+
+/* Task thumbnail in list */
+.task-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-thumbnail {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.task-thumbnail:hover {
+  transform: scale(1.1);
+}
+
+/* Image popup modal */
+.image-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  cursor: pointer;
+}
+
+.image-popup {
+  max-width: 90%;
+  max-height: 90%;
+  position: relative;
+}
+
+.image-popup img {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.close-popup {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.close-popup:hover {
+  background: white;
 }
 
 /* Share section */
