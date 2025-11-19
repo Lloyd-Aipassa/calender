@@ -1024,9 +1024,9 @@ onUnmounted(() => {
 
 .user-name {
   margin: 0;
-  color: #666;
-  font-size: 14px;
-  font-weight: 500;
+  color: #1d1d1d;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .header-actions {
