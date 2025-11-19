@@ -2,7 +2,8 @@
   <div class="calendar-container">
     <div class="calendar-header">
       <div class="header-left">
-        <h2>Gedeelde Agenda</h2>
+        <!--     <h2>Gedeelde Agenda</h2> -->
+
         <p v-if="userName" class="user-name">{{ userName }}</p>
       </div>
       <div class="header-actions">
