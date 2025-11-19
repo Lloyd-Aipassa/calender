@@ -188,8 +188,6 @@ const monthDays = computed(() => {
   const days = [];
   const today = new Date();
 
-  console.log('Building month days, total events:', events.value.length); // Debug
-
   // Generate 42 days (6 weeks) for complete month view
   for (let i = 0; i < 42; i++) {
     const date = new Date(startDate);
@@ -197,21 +195,11 @@ const monthDays = computed(() => {
 
     const dateStr = formatDate(date);
 
-    // Filter events for this day - FIRST define, THEN debug
+    // Filter events for this day
     const dayEvents = events.value.filter((event) => {
       const eventDate = event.date || event.start?.split('T')[0];
       return eventDate === dateStr;
     });
-
-    // Debug log for specific date AFTER dayEvents is defined
-    if (dateStr === '2025-08-14') {
-      console.log('Checking events for 2025-08-14:');
-      console.log(
-        '- Available events:',
-        events.value.map((e) => ({ title: e.title, date: e.date, start: e.start }))
-      );
-      console.log('- Matching events:', dayEvents);
-    }
 
     days.push({
       date: dateStr,
@@ -222,11 +210,6 @@ const monthDays = computed(() => {
       isWeekend: date.getDay() === 0 || date.getDay() === 6,
     });
   }
-
-  console.log(
-    'Month days built, total days with events:',
-    days.filter((d) => d.events.length > 0).length
-  ); // Debug
 
   return days;
 });
@@ -328,13 +311,9 @@ function logout() {
 // Event CRUD operations
 async function saveEvent() {
   try {
-    console.log('saveEvent called, editingEvent:', editingEvent.value);
-    console.log('eventForm values:', eventForm.value);
-
     if (editingEvent.value) {
       // Update existing event
       const updatedEvent = { ...eventForm.value, id: editingEvent.value.id };
-      console.log('Updating event:', updatedEvent);
 
       await updateEventAPI(updatedEvent);
 
@@ -359,10 +338,7 @@ async function saveEvent() {
         description: eventForm.value.description,
       };
 
-      console.log('Creating new event:', newEvent);
-
       const response = await createEventAPI(newEvent);
-      console.log('Create API response:', response);
 
       if (response && response.success && response.event) {
         // Add to local events array with proper format
@@ -376,17 +352,14 @@ async function saveEvent() {
         };
 
         events.value.push(newEventFormatted);
-        console.log('Event added to local array:', newEventFormatted);
 
         closeModal();
         alert('Afspraak toegevoegd!');
       } else {
-        console.error('Invalid API response:', response);
         alert('Fout: Event niet correct opgeslagen');
       }
     }
   } catch (error) {
-    console.error('Error in saveEvent:', error);
     alert('Fout bij het opslaan van afspraak: ' + (error.message || 'Onbekende fout'));
     // Always close modal on error to prevent hanging
     closeModal();
@@ -412,17 +385,12 @@ async function deleteEvent() {
 // API functions
 async function loadEventsAPI() {
   try {
-    console.log('Loading events from API...'); // Debug log
-
     const response = await $fetch(`${apiBase}/get_events.php`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${getAuthToken()}`,
       },
     });
-
-    console.log('API Response:', response); // Debug log
-    console.log('Events found:', response.events?.length || 0); // Debug log
 
     return response.events || [];
   } catch (error) {
@@ -434,8 +402,6 @@ async function loadEventsAPI() {
 
 async function createEventAPI(event) {
   try {
-    console.log('Making API call to create event:', event);
-
     const response = await $fetch(`${apiBase}/create_event.php`, {
       method: 'POST',
       body: JSON.stringify(event),
@@ -445,11 +411,8 @@ async function createEventAPI(event) {
       },
     });
 
-    console.log('Raw API response:', response);
     return response;
   } catch (error) {
-    console.error('Error in createEventAPI:', error);
-    console.error('Error details:', error.data);
     throw error;
   }
 }
@@ -512,14 +475,11 @@ function getUserInfoFromToken() {
       return JSON.parse(jsonPayload);
     } else {
       // Simple base64 encoded JSON (zoals deze app gebruikt)
-      console.log('🔍 Token is base64 encoded JSON (not JWT)');
       const decoded = atob(token);
       const userInfo = JSON.parse(decoded);
-      console.log('✅ Decoded user info:', userInfo);
       return userInfo;
     }
   } catch (error) {
-    console.error('Error decoding token:', error);
     return null;
   }
 }
@@ -530,17 +490,14 @@ let swRegistration = null;
 // Register Service Worker voor push notificaties
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) {
-    console.log('Service Worker niet ondersteund');
     return null;
   }
 
   try {
     const registration = await navigator.serviceWorker.register('/sw.js');
-    console.log('Service Worker geregistreerd:', registration);
     swRegistration = registration;
     return registration;
   } catch (error) {
-    console.error('Service Worker registratie mislukt:', error);
     return null;
   }
 }
@@ -548,36 +505,26 @@ async function registerServiceWorker() {
 // Vraag notificatie permissies
 async function requestNotificationPermission() {
   if (!('Notification' in window)) {
-    console.log('❌ Browser ondersteunt geen notificaties');
     return false;
   }
 
-  console.log('🔔 Huidige notification permission:', Notification.permission);
-
   if (Notification.permission === 'granted') {
     notificationsEnabled.value = true;
-    console.log('✅ Notificaties al toegestaan');
     return true;
   }
 
   if (Notification.permission !== 'denied') {
-    console.log('📝 Vraag notification permission...');
     const permission = await Notification.requestPermission();
     notificationsEnabled.value = permission === 'granted';
-    console.log('🔔 Permission result:', permission);
     return permission === 'granted';
   }
 
-  console.log('❌ Notificaties geweigerd door gebruiker');
   return false;
 }
 
 // Toon browser notificatie (werkt op zowel desktop als mobiel)
 async function showNotification(title, options = {}) {
-  console.log('🔔 showNotification called:', title, 'enabled:', notificationsEnabled.value);
-
   if (!notificationsEnabled.value || !('Notification' in window)) {
-    console.log('❌ Notificaties niet enabled of niet ondersteund');
     return;
   }
 
@@ -591,17 +538,14 @@ async function showNotification(title, options = {}) {
 
   // Gebruik Service Worker voor notificaties (werkt beter op mobiel)
   if (swRegistration && swRegistration.showNotification) {
-    console.log('✅ Toon notificatie via Service Worker:', title);
     try {
       await swRegistration.showNotification(title, notificationOptions);
     } catch (error) {
-      console.error('Service Worker notification failed:', error);
       // Fallback naar normale notificatie
       new Notification(title, notificationOptions);
     }
   } else {
     // Fallback voor desktop browsers
-    console.log('✅ Toon notificatie direct:', title);
     new Notification(title, notificationOptions);
   }
 }
@@ -610,12 +554,10 @@ async function showNotification(title, options = {}) {
 async function setupPusher() {
   const userInfo = getUserInfoFromToken();
   if (!userInfo || (!userInfo.user_id && !userInfo.id)) {
-    console.error('❌ Geen user ID gevonden in token');
     return;
   }
 
   const userId = userInfo.user_id || userInfo.id;
-  console.log('🔧 Setting up Pusher voor user ID:', userId);
 
   try {
     // Dynamically import Pusher
@@ -631,38 +573,12 @@ async function setupPusher() {
       forceTLS: true,
     });
 
-    console.log('📡 Pusher instance created');
-
-    // Debug: connection state
-    pusherInstance.connection.bind('state_change', (states) => {
-      console.log('Pusher state change:', states.previous, '->', states.current);
-    });
-
-    pusherInstance.connection.bind('connected', () => {
-      console.log('✅ Pusher connected!');
-    });
-
-    pusherInstance.connection.bind('error', (err) => {
-      console.error('❌ Pusher connection error:', err);
-    });
-
     // Gebruik public channel (geen auth nodig)
     const channelName = `user-${userId}`;
-    console.log('📺 Subscribing to channel:', channelName);
     const channel = pusherInstance.subscribe(channelName);
-
-    channel.bind('pusher:subscription_succeeded', () => {
-      console.log('✅ Successfully subscribed to', channelName);
-    });
-
-    channel.bind('pusher:subscription_error', (err) => {
-      console.error('❌ Subscription error:', err);
-    });
 
     // Event created
     channel.bind('event-created', async (data) => {
-      console.log('📅 Nieuw event ontvangen via Pusher:', data);
-
       // Voeg toe aan events array (check of niet al bestaat)
       const exists = events.value.some((e) => e.id === data.id);
       if (!exists) {
@@ -678,8 +594,6 @@ async function setupPusher() {
 
     // Event updated
     channel.bind('event-updated', async (data) => {
-      console.log('📝 Event update ontvangen via Pusher:', data);
-
       const index = events.value.findIndex((e) => e.id === data.id);
       if (index !== -1) {
         events.value[index] = { ...events.value[index], ...data };
@@ -694,8 +608,6 @@ async function setupPusher() {
 
     // Event deleted
     channel.bind('event-deleted', async (data) => {
-      console.log('🗑️ Event verwijderd via Pusher:', data);
-
       events.value = events.value.filter((e) => e.id !== data.id);
 
       // Toon notificatie
@@ -704,10 +616,8 @@ async function setupPusher() {
         tag: `event-${data.id}`,
       });
     });
-
-    console.log('✅ Pusher connected voor user:', userId);
   } catch (error) {
-    console.error('Pusher setup error:', error);
+    // Silently handle pusher errors
   }
 }
 
@@ -716,14 +626,12 @@ onMounted(async () => {
   // Check if user is authenticated before loading
   const token = getAuthToken();
   if (!token) {
-    console.log('❌ No auth token found, skipping calendar initialization');
     return;
   }
 
   // Validate token has user info
   const userInfo = getUserInfoFromToken();
   if (!userInfo || (!userInfo.user_id && !userInfo.id)) {
-    console.log('❌ Invalid token, skipping calendar initialization');
     return;
   }
 
@@ -770,7 +678,6 @@ onMounted(async () => {
     // Check if still authenticated before refreshing
     const currentToken = getAuthToken();
     if (!currentToken) {
-      console.log('No token found, stopping auto-refresh');
       clearInterval(refreshInterval);
       return;
     }
@@ -778,12 +685,9 @@ onMounted(async () => {
     try {
       const loadedEvents = await loadEventsAPI();
       events.value = loadedEvents;
-      console.log('Events auto-refreshed');
     } catch (error) {
-      console.error('Auto-refresh failed:', error);
       // If 401 error, stop the interval
       if (error.statusCode === 401) {
-        console.log('Unauthorized, stopping auto-refresh');
         clearInterval(refreshInterval);
       }
     }
@@ -814,177 +718,5 @@ onUnmounted(() => {
   border-radius: 15px;
   padding: 15px;
   background-color: #fff;
-}
-
-/* Invitations Banner */
-.invitations-banner {
-  background: linear-gradient(135deg, #ffe5e5, #ffcccc);
-  border: 1px solid #fa0101;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(250, 1, 1, 0.1);
-}
-
-.invitation-header h4 {
-  margin: 0 0 10px 0;
-  color: #fa0101;
-  font-size: 16px;
-}
-
-.invitations-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.invitation-item {
-  background: white;
-  padding: 12px;
-  border-radius: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.invitation-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.invitation-permission {
-  font-size: 12px;
-  color: #666;
-  font-style: italic;
-}
-
-.invitation-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-accept {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.btn-accept:hover {
-  background-color: #218838;
-}
-
-.btn-decline {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.btn-decline:hover {
-  background-color: #c82333;
-}
-
-/* Share Modal Styles */
-.share-section {
-  margin-bottom: 25px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.share-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.share-section h4 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: #333;
-  font-size: 16px;
-}
-
-.share-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  margin-bottom: 8px;
-}
-
-.share-info {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.share-email {
-  font-size: 12px;
-  color: #666;
-}
-
-.share-permission {
-  font-size: 12px;
-  padding: 2px 6px;
-  background: #ffe5e5;
-  color: #fa0101;
-  border-radius: 12px;
-  display: inline-block;
-  width: fit-content;
-}
-
-.share-status {
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 12px;
-  display: inline-block;
-  width: fit-content;
-}
-
-.share-status.pending {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.share-status.accepted {
-  background: #d4edda;
-  color: #155724;
-}
-
-.no-shares {
-  color: #666;
-  font-style: italic;
-  text-align: center;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 6px;
-}
-
-.btn-danger-small {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.btn-danger-small:hover {
-  background-color: #c82333;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
 }
 </style>
