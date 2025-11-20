@@ -135,7 +135,6 @@ async function fetchLists() {
       initializeListSettings();
     }
   } catch (error) {
-    console.error('Error fetching lists:', error);
   }
 }
 

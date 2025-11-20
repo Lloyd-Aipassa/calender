@@ -13,14 +13,11 @@ export default defineNuxtPlugin(() => {
         },
       });
 
-      console.log('✅ OneSignal initialized!');
 
       // Request notification permission on load
       const permission = await OneSignal.Notifications.permission;
-      console.log('🔔 OneSignal permission:', permission);
 
       if (!permission) {
-        console.log('📢 Requesting notification permission...');
         await OneSignal.Notifications.requestPermission();
       }
     });

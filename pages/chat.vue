@@ -87,21 +87,17 @@ async function requestNotificationPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
     try {
       const permission = await Notification.requestPermission();
-      console.log('Notification permission:', permission);
     } catch (error) {
-      console.error('Error requesting notification permission:', error);
     }
   }
 }
 
 // Mobile in-app notification banner (not currently used - global service handles notifications)
 function showMobileNotificationBanner(messageData) {
-  console.log('showMobileNotificationBanner called');
 
   // Remove existing banner if any
   const existingBanner = document.querySelector('.mobile-notification-banner');
   if (existingBanner) {
-    console.log('Removing existing banner');
     existingBanner.remove();
   }
 
@@ -118,18 +114,14 @@ function showMobileNotificationBanner(messageData) {
     </div>
   `;
 
-  console.log('Banner created:', banner);
 
   // Add vibration feedback
   if ('vibrate' in navigator) {
-    console.log('Vibrating device...');
     navigator.vibrate([200, 100, 200]);
   }
 
   // Add to page
-  console.log('Appending banner to body...');
   document.body.appendChild(banner);
-  console.log('Banner appended. Total banners in DOM:', document.querySelectorAll('.mobile-notification-banner').length);
 
   // Close button handler
   const closeBtn = banner.querySelector('.notification-close');
@@ -171,7 +163,6 @@ onMounted(async () => {
     });
     currentUserId.value = userInfo.user.id;
   } catch (error) {
-    console.error('Failed to get user info:', error);
     navigateTo('/login');
     return;
   }
@@ -186,7 +177,6 @@ onMounted(async () => {
 // Cleanup: unsubscribe when leaving chat page
 // DON'T unsubscribe when leaving chat - global service keeps listening for notifications!
 // onUnmounted(() => {
-//   console.log('💀 Chat component unmounting - keeping subscription active');
 // });
 
 async function loadConversations() {
@@ -196,7 +186,6 @@ async function loadConversations() {
     });
     conversations.value = response.conversations;
   } catch (error) {
-    console.error('Failed to load conversations:', error);
   }
 }
 
@@ -207,7 +196,6 @@ async function loadAvailableUsers() {
     });
     availableUsers.value = response.users;
   } catch (error) {
-    console.error('Failed to load users:', error);
   }
 }
 
@@ -227,16 +215,13 @@ async function selectConversation(convId) {
     );
     messages.value = response.messages;
   } catch (error) {
-    console.error('Failed to load messages:', error);
     return;
   }
 
   // Subscribe to conversation using global Pusher service
   // The global service will handle notifications even when we navigate away
-  console.log('💬 Chat page: subscribing to conversation', convId);
   subscribeToConversation(convId, (data) => {
     // This callback is for updating the UI when chat is open
-    console.log('💬 Chat page: received message for UI update:', data);
 
     // Add message to the list (only from other users - global service filters this)
     messages.value.push(data);
@@ -267,7 +252,6 @@ async function sendMessage() {
   scrollToBottom();
 
   try {
-    console.log('📤 Sending message to server...');
     const response = await $fetch(`${apiBase}/chat/send_message.php`, {
       method: 'POST',
       headers: {
@@ -279,9 +263,7 @@ async function sendMessage() {
         message: messageText
       })
     });
-    console.log('Message sent, server response:', response);
   } catch (error) {
-    console.error('Failed to send message:', error);
     // Verwijder optimistic message bij fout
     messages.value = messages.value.filter(m => m.id !== tempMessage.id);
   } finally {
@@ -313,7 +295,6 @@ async function startNewConversation() {
     // Select the new conversation
     selectConversation(response.conversation_id);
   } catch (error) {
-    console.error('Failed to start conversation:', error);
     alert('Kon gesprek niet starten. Controleer of het user ID correct is.');
   }
 }

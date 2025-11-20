@@ -376,7 +376,6 @@ async function deleteEvent() {
       closeModal();
       alert('Afspraak verwijderd!');
     } catch (error) {
-      console.error('Error deleting event:', error);
       alert('Fout bij het verwijderen van afspraak');
     }
   }
@@ -394,7 +393,6 @@ async function loadEventsAPI() {
 
     return response.events || [];
   } catch (error) {
-    console.error('Error loading events:', error);
     alert('Fout bij het laden van events: ' + (error.data?.error || error.message));
     return [];
   }
@@ -429,7 +427,6 @@ async function updateEventAPI(event) {
     });
     return response;
   } catch (error) {
-    console.error('Error updating event:', error);
     throw error;
   }
 }
@@ -446,7 +443,6 @@ async function deleteEventAPI(eventId) {
     });
     return response;
   } catch (error) {
-    console.error('Error deleting event:', error);
     throw error;
   }
 }
@@ -660,7 +656,6 @@ onMounted(async () => {
     const loadedEvents = await loadEventsAPI();
     events.value = loadedEvents;
   } catch (error) {
-    console.error('Failed to load events:', error);
   }
 
   // Register Service Worker voor push notificaties

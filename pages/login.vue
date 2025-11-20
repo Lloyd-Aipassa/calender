@@ -82,7 +82,6 @@ async function handleSubmit() {
       payload.name = credentials.value.name;
     }
 
-    console.log('Sending:', payload);
 
     const config = useRuntimeConfig()
     const apiBase = config.public.apiBaseUrl
@@ -98,12 +97,10 @@ async function handleSubmit() {
       }
     );
 
-    console.log('Response:', response);
 
     if (response.success) {
       // Store the token
       localStorage.setItem('authToken', response.token);
-      console.log('Token saved:', response.token);
 
       // Small delay to ensure token is saved before navigation
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -124,7 +121,6 @@ async function handleSubmit() {
         response.error || (isRegister.value ? 'Registratie mislukt' : 'Inloggen mislukt');
     }
   } catch (err) {
-    console.error('Auth error:', err);
     error.value = err.data?.error || 'Er is een fout opgetreden';
   } finally {
     isLoading.value = false;

@@ -14,7 +14,6 @@ const isAuthenticated = ref(false);
 onBeforeMount(() => {
   const token = localStorage.getItem('authToken');
   if (!token) {
-    console.log('No auth token, redirecting to login');
     navigateTo('/login');
     return;
   }

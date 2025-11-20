@@ -107,7 +107,6 @@ async function acceptInvite() {
       error.value = response.error || 'Fout bij accepteren uitnodiging';
     }
   } catch (err) {
-    console.error('Error accepting invite:', err);
     error.value = err.data?.error || 'Fout bij accepteren uitnodiging. Mogelijk is de uitnodiging verlopen of al geaccepteerd.';
   } finally {
     accepting.value = false;

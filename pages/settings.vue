@@ -235,7 +235,6 @@ async function checkConnections() {
       googleConnected.value = response.connections.google || false;
     }
   } catch (err) {
-    console.error('Error checking connections:', err);
   }
 }
 
@@ -263,7 +262,6 @@ async function connectGoogle() {
       error.value = 'Kon koppeling niet starten';
     }
   } catch (err) {
-    console.error('Connect error:', err);
     error.value = err.data?.error || 'Er is een fout opgetreden';
   } finally {
     isLoading.value = false;
@@ -294,7 +292,6 @@ async function disconnectGoogle() {
       successMessage.value = 'Google Calendar ontkoppeld';
     }
   } catch (err) {
-    console.error('Disconnect error:', err);
     error.value = err.data?.error || 'Er is een fout opgetreden';
   } finally {
     isLoading.value = false;
@@ -322,7 +319,6 @@ async function loadInvites() {
       sentInvites.value = response.sent_invites.filter(i => i.status === 'pending') || [];
     }
   } catch (err) {
-    console.error('Error loading invites:', err);
   }
 }
 
@@ -355,7 +351,6 @@ async function sendInvite() {
       loadInvites();
     }
   } catch (err) {
-    console.error('Send invite error:', err);
     error.value = err.data?.error || 'Er is een fout opgetreden bij het versturen';
   } finally {
     isInviting.value = false;
@@ -370,7 +365,6 @@ async function copyInviteLink() {
       linkCopied.value = false;
     }, 2000);
   } catch (err) {
-    console.error('Copy error:', err);
   }
 }
 
@@ -397,7 +391,6 @@ async function revokeAccess(userId) {
       loadInvites();
     }
   } catch (err) {
-    console.error('Revoke error:', err);
     error.value = err.data?.error || 'Er is een fout opgetreden';
   }
 }
@@ -425,7 +418,6 @@ function toggleDebug() {
       document.body.appendChild(script);
       script.onload = () => {
         window.eruda.init();
-        console.log('✅ Eruda debug console enabled from settings!');
       };
     } else {
       window.eruda.show();

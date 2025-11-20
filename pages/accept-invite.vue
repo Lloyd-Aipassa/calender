@@ -93,7 +93,6 @@ onMounted(async () => {
       loading.value = false;
     }
   } catch (err) {
-    console.error('Error loading invite:', err);
     error.value = 'Kon uitnodiging niet laden';
     loading.value = false;
   }
@@ -121,7 +120,6 @@ async function acceptInvite() {
       successMessage.value = `Je hebt nu toegang tot de kalender van ${response.owner_name}!`;
     }
   } catch (err) {
-    console.error('Accept error:', err);
     error.value = err.data?.error || 'Er is een fout opgetreden bij het accepteren';
   } finally {
     accepting.value = false;

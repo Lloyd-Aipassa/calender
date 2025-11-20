@@ -250,7 +250,6 @@ async function fetchLists() {
     const data = await response.json();
     taskLists.value = data.lists || [];
   } catch (error) {
-    console.error('Error fetching lists:', error);
     alert('Fout bij ophalen takenlijsten');
   }
 }
@@ -272,7 +271,6 @@ async function fetchTasks() {
     const data = await response.json();
     tasks.value = data.tasks || [];
   } catch (error) {
-    console.error('Error fetching tasks:', error);
     alert('Fout bij ophalen taken');
   }
 }
@@ -302,7 +300,6 @@ async function createList() {
       selectList(data.list.id);
     }
   } catch (error) {
-    console.error('Error creating list:', error);
     alert('Fout bij aanmaken lijst');
   }
 }
@@ -329,7 +326,6 @@ async function updateList() {
       closeEditListModal();
     }
   } catch (error) {
-    console.error('Error updating list:', error);
     alert('Fout bij bijwerken lijst');
   }
 }
@@ -361,7 +357,6 @@ async function deleteList() {
       closeEditListModal();
     }
   } catch (error) {
-    console.error('Error deleting list:', error);
     alert('Fout bij verwijderen lijst');
   }
 }
@@ -388,7 +383,6 @@ async function fetchAllUsers() {
     const data = await response.json();
     allUsers.value = data.users || [];
   } catch (error) {
-    console.error('Error fetching users:', error);
   }
 }
 
@@ -415,7 +409,6 @@ async function fetchListShares() {
     const data = await response.json();
     listShares.value = data.shares || [];
   } catch (error) {
-    console.error('Error fetching list shares:', error);
   }
 }
 
@@ -451,7 +444,6 @@ async function shareList() {
       alert('Lijst gedeeld!');
     }
   } catch (error) {
-    console.error('Error sharing list:', error);
     alert('Fout bij delen lijst');
   }
 }
@@ -481,7 +473,6 @@ async function unshareList(sharedWithUserId) {
       await fetchListShares();
     }
   } catch (error) {
-    console.error('Error unsharing list:', error);
     alert('Fout bij intrekken toegang');
   }
 }
@@ -534,7 +525,6 @@ async function saveTask() {
       closeModal();
     }
   } catch (error) {
-    console.error('Error saving task:', error);
     alert('Fout bij opslaan taak');
   }
 }
@@ -561,7 +551,6 @@ async function toggleTask(task) {
       await fetchLists(); // Update counts
     }
   } catch (error) {
-    console.error('Error toggling task:', error);
     alert('Fout bij bijwerken taak');
   }
 }
@@ -588,10 +577,6 @@ async function confirmDelete(task) {
     return;
   }
 
-  console.log('Deleting task:', task);
-  console.log('Task list ID:', task.task_list_id);
-  console.log('Task type:', task.task_type);
-  console.log('Permission level:', task.permission_level);
 
   try {
     const response = await fetch(`${apiBase}/delete_task.php`, {
@@ -605,7 +590,6 @@ async function confirmDelete(task) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Delete task error response:', errorData);
       throw new Error(errorData.error || 'Failed to delete task');
     }
 
@@ -615,7 +599,6 @@ async function confirmDelete(task) {
       await fetchLists(); // Update counts
     }
   } catch (error) {
-    console.error('Error deleting task:', error);
     alert(`Fout bij verwijderen taak: ${error.message}`);
   }
 }
@@ -639,7 +622,6 @@ async function deleteAllCompleted() {
           body: JSON.stringify({ id: task.id }),
         });
       } catch (error) {
-        console.error('Error deleting task:', task.id, error);
       }
     }
   }
