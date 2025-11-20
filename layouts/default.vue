@@ -1,10 +1,11 @@
 <template>
   <div class="app-layout">
-    <NavigationHeader />
+    <NavigationHeader class="nav-desktop" />
     <div class="content-spacer"></div>
     <main class="main-content">
       <slot />
     </main>
+    <NavigationHeader class="nav-mobile" />
   </div>
 </template>
 
@@ -113,15 +114,27 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
+.nav-mobile {
+  display: none;
+}
+
 /* Mobile bottom navigation */
 @media (max-width: 768px) {
+  .nav-desktop {
+    display: none;
+  }
+
+  .nav-mobile {
+    display: block;
+  }
+
   .main-content {
-    padding-bottom: 80px;
+    padding-bottom: 0;
   }
 }
 
-/* PWA Standalone Mode Styling */
-@media all and (display-mode: standalone) {
+/* PWA Standalone Mode Styling - alleen voor desktop */
+@media all and (display-mode: standalone) and (min-width: 769px) {
   .nav-header {
     position: fixed !important;
     top: 0;
@@ -141,9 +154,10 @@ html, body {
   }
 }
 
+/* PWA Standalone Mode - mobiel: padding voor safe areas */
 @media all and (display-mode: standalone) and (max-width: 768px) {
-  .main-content {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  .nav-mobile {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 </style>
