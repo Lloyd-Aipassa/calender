@@ -182,4 +182,42 @@ function formatDate(timestamp) {
   font-size: 11px;
   color: #999;
 }
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    position: absolute;
+    z-index: 10;
+    background: white;
+    height: 100%;
+    transition: transform 0.3s;
+  }
+
+  .sidebar.hidden {
+    transform: translateX(-100%);
+  }
+
+  .sidebar-header h3 {
+    font-size: 18px;
+  }
+
+  .new-chat-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+
+  .conversation {
+    padding: 12px 15px;
+    background-color: #fff;
+  }
+
+  .conv-content strong {
+    font-size: 14px;
+  }
+
+  .last-message {
+    font-size: 12px;
+  }
+}
 </style>
