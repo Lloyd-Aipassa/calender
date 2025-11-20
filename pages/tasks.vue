@@ -754,7 +754,7 @@ watch(showAddTask, (isShown) => {
 <style scoped>
 .tasks-page {
   display: flex;
-  height: calc(100vh - 60px);
+  height: 100%;
   background: #f5f5f5;
 }
 
@@ -763,6 +763,7 @@ watch(showAddTask, (isShown) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
 /* Responsive */
