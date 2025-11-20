@@ -1,6 +1,6 @@
 <!-- pages/index.vue -->
 <template>
-  <div v-if="isAuthenticated">
+  <div v-if="isAuthenticated" class="calendar-page">
     <Calendar />
   </div>
 </template>
@@ -30,3 +30,10 @@ onMounted(() => {
   }
 });
 </script>
+
+<style scoped>
+.calendar-page {
+  height: 100%;
+  overflow-y: auto;
+}
+</style>
