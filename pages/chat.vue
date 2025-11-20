@@ -2,36 +2,13 @@
   <div class="chat-page">
     <div class="chat-container">
       <!-- Sidebar met conversations -->
-      <div class="sidebar" :class="{ hidden: !showSidebar }">
-        <div class="sidebar-header">
-          <h3>Berichten</h3>
-          <button @click="showNewChatModal = true" class="new-chat-btn">+</button>
-        </div>
-
-        <div v-if="conversations.length === 0" class="empty-state">
-          Nog geen gesprekken
-        </div>
-
-        <div
-          v-for="conv in conversations"
-          :key="conv.id"
-          @click="selectConversation(conv.id)"
-          :class="['conversation', { active: selectedConv === conv.id }]"
-        >
-          <div class="conv-content">
-            <strong>{{ getConversationName(conv) }}</strong>
-            <p class="last-message">{{ conv.last_message || 'Geen berichten' }}</p>
-          </div>
-          <div class="conv-meta">
-            <span v-if="conv.unread_count > 0" class="badge">
-              {{ conv.unread_count }}
-            </span>
-            <span v-if="conv.last_message_time" class="time">
-              {{ formatDate(conv.last_message_time) }}
-            </span>
-          </div>
-        </div>
-      </div>
+      <ChatSidebar
+        :conversations="conversations"
+        :selected-conv="selectedConv"
+        :show-sidebar="showSidebar"
+        @select-conversation="selectConversation"
+        @show-new-chat-modal="showNewChatModal = true"
+      />
 
       <!-- Main chat area -->
       <div class="main-chat">
@@ -41,73 +18,49 @@
 
         <template v-else>
           <!-- Chat header -->
-          <div class="chat-header">
-            <button @click="toggleSidebar" class="back-btn">←</button>
-            <h3>{{ getCurrentConversationName() }}</h3>
-          </div>
+          <ChatHeader
+            :conversation-name="getCurrentConversationName()"
+            @toggle-sidebar="toggleSidebar"
+          />
 
           <!-- Messages -->
-          <div class="messages" ref="messagesContainer">
-            <div
-              v-for="msg in messages"
-              :key="msg.id"
-              :class="['message', msg.sender_id === currentUserId ? 'own' : 'other']"
-            >
-              <div v-if="msg.sender_id !== currentUserId" class="sender">
-                {{ msg.sender_name }}
-              </div>
-              <div class="content">{{ msg.message }}</div>
-              <div class="time">{{ formatTime(msg.created_at) }}</div>
-            </div>
-          </div>
+          <MessagesList
+            ref="messagesListRef"
+            :messages="messages"
+            :current-user-id="currentUserId"
+          />
 
           <!-- Input area -->
-          <div class="input-area">
-            <input
-              v-model="newMessage"
-              @keyup.enter="sendMessage"
-              placeholder="Type een bericht..."
-              :disabled="sending"
-            />
-            <button
-              @click="sendMessage"
-              :disabled="!newMessage || !newMessage.trim() || sending"
-              class="send-btn">
-              Verstuur
-            </button>
-          </div>
+          <ChatInput
+            v-model="newMessage"
+            :sending="sending"
+            @send="sendMessage"
+          />
         </template>
       </div>
     </div>
 
     <!-- New chat modal -->
-    <div v-if="showNewChatModal" class="modal-overlay" @click="closeNewChatModal">
-      <div class="modal" @click.stop>
-        <h3>Nieuw gesprek starten</h3>
-        <p>Selecteer een gebruiker om mee te chatten:</p>
-
-        <select v-model="newChatUserId" class="user-select">
-          <option value="">-- Kies een gebruiker --</option>
-          <option v-for="user in availableUsers" :key="user.id" :value="user.id">
-            {{ user.name }} ({{ user.email }})
-          </option>
-        </select>
-
-        <div class="modal-buttons">
-          <button @click="closeNewChatModal" class="btn-cancel">Annuleren</button>
-          <button @click="startNewConversation" :disabled="!newChatUserId" class="btn-primary">
-            Start gesprek
-          </button>
-        </div>
-      </div>
-    </div>
+    <NewChatModal
+      :show="showNewChatModal"
+      :available-users="availableUsers"
+      v-model:selected-user-id="newChatUserId"
+      @close="closeNewChatModal"
+      @start-conversation="startNewConversation"
+    />
   </div>
 </template>
 
 <script setup>
 import { usePusher } from '~/composables/usePusher';
+import ChatSidebar from '~/components/chat/ChatSidebar.vue';
+import ChatHeader from '~/components/chat/ChatHeader.vue';
+import MessagesList from '~/components/chat/MessagesList.vue';
+import ChatInput from '~/components/chat/ChatInput.vue';
+import NewChatModal from '~/components/chat/NewChatModal.vue';
 
-const apiBase = 'https://calender.brooklynwebdesign.nl/api/endpoints';
+const config = useRuntimeConfig();
+const apiBase = config.public.apiBaseUrl;
 
 const conversations = ref([]);
 const messages = ref([]);
@@ -122,7 +75,7 @@ const showSidebar = ref(true);
 
 // Use global Pusher service instead of local instance
 const { subscribeToConversation, unsubscribeFromConversation } = usePusher();
-const messagesContainer = ref(null);
+const messagesListRef = ref(null);
 
 // Helper om auth token te krijgen
 function getAuthToken() {
@@ -377,30 +330,9 @@ function getCurrentConversationName() {
   return conv ? getConversationName(conv) : '';
 }
 
-function formatTime(timestamp) {
-  return new Date(timestamp).toLocaleTimeString('nl-NL', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
-function formatDate(timestamp) {
-  const date = new Date(timestamp);
-  const today = new Date();
-
-  if (date.toDateString() === today.toDateString()) {
-    return formatTime(timestamp);
-  }
-
-  return date.toLocaleDateString('nl-NL', {
-    day: 'numeric',
-    month: 'short'
-  });
-}
-
 function scrollToBottom() {
   nextTick(() => {
-    const container = messagesContainer.value;
+    const container = messagesListRef.value?.messagesContainer;
     if (container) {
       container.scrollTop = container.scrollHeight;
     }
@@ -438,111 +370,6 @@ function toggleSidebar() {
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-/* Sidebar */
-.sidebar {
-  width: 320px;
-  border-right: 1px solid #e0e0e0;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #fff;
-}
-
-.sidebar-header h3 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.new-chat-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #4caf50;
-  color: white;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.new-chat-btn:hover {
-  background: #45a049;
-}
-
-.empty-state {
-  padding: 40px 20px;
-  text-align: center;
-  color: #999;
-}
-
-.conversation {
-  padding: 15px 20px;
-  cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: space-between;
-  transition: background 0.2s;
-}
-
-.conversation:hover {
-  background: #f8f8f8;
-}
-
-.conversation.active {
-  background: #e3f2fd;
-}
-
-.conv-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.conv-content strong {
-  display: block;
-  margin-bottom: 4px;
-  font-size: 15px;
-}
-
-.last-message {
-  margin: 0;
-  font-size: 13px;
-  color: #666;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.conv-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.badge {
-  background: #ff5722;
-  color: white;
-  border-radius: 12px;
-  padding: 2px 8px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.time {
-  font-size: 11px;
-  color: #999;
-}
-
-/* Main chat */
 .main-chat {
   flex: 1;
   display: flex;
@@ -558,222 +385,6 @@ function toggleSidebar() {
   font-size: 18px;
 }
 
-.chat-header {
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
-  background: #fafafa;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.chat-header h3 {
-  margin: 0;
-  font-size: 18px;
-  flex: 1;
-}
-
-.back-btn {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-}
-
-.messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  background: #fafafa;
-}
-
-.message {
-  margin-bottom: 20px;
-  max-width: 60%;
-  animation: fadeIn 0.2s;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.message.own {
-  margin-left: auto;
-}
-
-.message.other {
-  margin-right: auto;
-}
-
-.message .sender {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 4px;
-  font-weight: 500;
-}
-
-.message .content {
-  background: white;
-  padding: 10px 15px;
-  border-radius: 12px;
-  word-wrap: break-word;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-}
-
-.message.own .content {
-  background: #4caf50;
-  color: white;
-  border-bottom-right-radius: 4px;
-}
-
-.message.other .content {
-  background: white;
-  border-bottom-left-radius: 4px;
-}
-
-.message .time {
-  font-size: 11px;
-  color: #999;
-  margin-top: 4px;
-}
-
-.message.own .time {
-  text-align: right;
-}
-
-/* Input area */
-.input-area {
-  display: flex;
-  gap: 10px;
-  padding: 20px;
-  border-top: 1px solid #e0e0e0;
-  background: white;
-}
-
-.input-area input {
-  flex: 1;
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 24px;
-  font-size: 14px;
-  outline: none;
-}
-
-.input-area input:focus {
-  border-color: #4caf50;
-}
-
-.input-area button {
-  padding: 12px 24px;
-  background: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 24px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background 0.2s;
-}
-
-.input-area button:hover:not(:disabled) {
-  background: #45a049;
-}
-
-.input-area button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  width: 400px;
-  max-width: 90%;
-}
-
-.modal h3 {
-  margin: 0 0 10px 0;
-}
-
-.modal p {
-  color: #666;
-  margin-bottom: 20px;
-}
-
-.modal input,
-.user-select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  font-size: 14px;
-  margin-bottom: 20px;
-}
-
-.user-select {
-  cursor: pointer;
-  background: white;
-}
-
-.user-select:focus {
-  outline: none;
-  border-color: #4caf50;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.modal-buttons button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-cancel {
-  background: #f5f5f5;
-  color: #333;
-}
-
-.btn-cancel:hover {
-  background: #e0e0e0;
-}
-
-.btn-primary {
-  background: #4caf50;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #45a049;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .chat-page {
@@ -785,67 +396,8 @@ function toggleSidebar() {
     border-radius: 0;
   }
 
-  .sidebar {
-    width: 100%;
-    position: absolute;
-    z-index: 10;
-    transition: transform 0.3s;
-  }
-
-  .sidebar.hidden {
-    transform: translateX(-100%);
-  }
-
   .main-chat {
     width: 100%;
-  }
-
-  .back-btn {
-    display: flex !important;
-  }
-
-  .message {
-    max-width: 85%;
-  }
-
-  .sidebar-header h3 {
-    font-size: 18px;
-  }
-
-  .new-chat-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 20px;
-  }
-
-  .conversation {
-    padding: 12px 15px;
-    background-color: #fff;
-  }
-
-  .conv-content strong {
-    font-size: 14px;
-  }
-
-  .last-message {
-    font-size: 12px;
-  }
-
-  .input-area {
-    padding: 15px;
-  }
-
-  .input-area input {
-    font-size: 16px; /* Prevents zoom on iOS */
-  }
-
-  .modal {
-    width: 90%;
-    padding: 20px;
-  }
-
-  .modal h3 {
-    font-size: 18px;
   }
 }
 

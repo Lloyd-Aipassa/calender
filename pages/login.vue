@@ -85,7 +85,7 @@ async function handleSubmit() {
     console.log('Sending:', payload);
 
     const config = useRuntimeConfig()
-    const apiBase = config.public.apiBaseUrl || 'https://calender.brooklynwebdesign.nl'
+    const apiBase = config.public.apiBaseUrl
 
     const response = await $fetch(
       `${apiBase}/auth.php`,

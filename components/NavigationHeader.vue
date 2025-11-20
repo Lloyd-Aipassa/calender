@@ -33,6 +33,7 @@
 <script setup>
 const userName = ref('Gebruiker');
 const router = useRouter();
+const config = useRuntimeConfig();
 
 // Haal gebruikersnaam op
 onMounted(async () => {
@@ -40,7 +41,7 @@ onMounted(async () => {
   if (token) {
     try {
       const response = await $fetch(
-        'https://calender.brooklynwebdesign.nl/api/endpoints/get_user_info.php',
+        `${config.public.apiBaseUrl}/get_user_info.php`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

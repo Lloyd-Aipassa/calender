@@ -1,7 +1,7 @@
 // API helper composable
 export const useApi = () => {
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBaseUrl || 'https://calender.brooklynwebdesign.nl'
+  const apiBase = config.public.apiBaseUrl
 
   const getAuthToken = () => {
     if (typeof window !== 'undefined') {

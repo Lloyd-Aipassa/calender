@@ -27,7 +27,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'https://calender.brooklynwebdesign.nl/api/endpoints',
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
       oneSignalAppId: '6cb000af-0fa3-4599-bae3-ab376c12bb36'
     }
   },
