@@ -3,7 +3,7 @@
   "short_name": "Kalender",
   "description": "Gedeelde agenda met real-time synchronisatie",
   "start_url": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#fa0101",
   "orientation": "portrait",
