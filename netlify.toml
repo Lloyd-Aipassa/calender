@@ -1,0 +1,22 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Deze publieke API URL mag in de build output staan
+  SECRETS_SCAN_OMIT_KEYS = "NUXT_PUBLIC_API_BASE_URL"
+
+[[headers]]
+  for = "/_nuxt/builds/meta/*"
+  [headers.values]
+    cache-control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_nuxt/builds/*"
+  [headers.values]
+    cache-control = "public, max-age=1, immutable"
+
+[[headers]]
+  for = "/_nuxt/*"
+  [headers.values]
+    cache-control = "public, max-age=31536000, immutable"
