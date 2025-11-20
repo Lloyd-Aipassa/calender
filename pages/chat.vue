@@ -337,16 +337,14 @@ function toggleSidebar() {
 
 <style scoped>
 .chat-page {
-  height: 100%;
+  min-height: calc(100vh - 64px);
   padding: 20px;
   background: #f5f5f5;
-  display: flex;
-  flex-direction: column;
 }
 
 .chat-container {
   display: flex;
-  flex: 1;
+  height: calc(100vh - 104px);
   background: white;
   border-radius: 8px;
   overflow: hidden;
@@ -357,7 +355,6 @@ function toggleSidebar() {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 0;
 }
 
 .no-conversation {
@@ -376,6 +373,7 @@ function toggleSidebar() {
   }
 
   .chat-container {
+    height: calc(100vh - 64px);
     border-radius: 0;
   }
 

@@ -1,11 +1,10 @@
 <template>
   <div class="app-layout">
-    <NavigationHeader class="nav-desktop" />
+    <NavigationHeader />
     <div class="content-spacer"></div>
     <main class="main-content">
       <slot />
     </main>
-    <NavigationHeader class="nav-mobile" />
   </div>
 </template>
 
@@ -87,21 +86,16 @@ useHead({
   box-sizing: border-box;
 }
 
-html, body {
+body {
   margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background: #f5f5f5;
 }
 
 .app-layout {
-  height: 100vh;
-  height: 100dvh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .content-spacer {
@@ -110,31 +104,17 @@ html, body {
 
 .main-content {
   flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.nav-mobile {
-  display: none;
 }
 
 /* Mobile bottom navigation */
 @media (max-width: 768px) {
-  .nav-desktop {
-    display: none;
-  }
-
-  .nav-mobile {
-    display: block;
-  }
-
   .main-content {
-    padding-bottom: 0;
+    padding-bottom: 80px;
   }
 }
 
-/* PWA Standalone Mode Styling - alleen voor desktop */
-@media all and (display-mode: standalone) and (min-width: 769px) {
+/* PWA Standalone Mode Styling */
+@media all and (display-mode: standalone) {
   .nav-header {
     position: fixed !important;
     top: 0;
@@ -154,10 +134,9 @@ html, body {
   }
 }
 
-/* PWA Standalone Mode - mobiel: padding voor safe areas */
 @media all and (display-mode: standalone) and (max-width: 768px) {
-  .nav-mobile {
-    padding-bottom: env(safe-area-inset-bottom);
+  .main-content {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 }
 </style>

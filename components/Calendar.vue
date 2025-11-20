@@ -705,7 +705,6 @@ onUnmounted(() => {
   padding-top: max(20px, env(safe-area-inset-top));
   padding-bottom: max(20px, env(safe-area-inset-bottom));
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  min-height: 100%;
 }
 
 .calendar-content {
