@@ -65,71 +65,33 @@ export const useOneSignal = () => {
         // CRITICAL: Check if subscription is in broken state (external ID set but no OneSignal ID)
         if (!onesignalId || onesignalId === 'undefined') {
           console.warn('OneSignal: BROKEN STATE DETECTED - External ID set but no OneSignal ID!');
-          console.log('OneSignal: Attempting to fix by logging out and back in...');
+          console.error('OneSignal: This requires manual intervention. Please:');
+          console.error('1. Uninstall the PWA');
+          console.error('2. Clear browser data for this site');
+          console.error('3. Reinstall the PWA');
+          console.error('OneSignal: The subscription is in an irrecoverable broken state.');
 
+          // Try to send external user ID to backend anyway, as fallback
           try {
-            await window.OneSignal.logout();
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            console.log('OneSignal: Logged out, now logging back in...');
+            const config = useRuntimeConfig();
+            const apiBase = config.public.apiBaseUrl;
+            const token = localStorage.getItem('authToken');
 
-            // Try login, but don't fail if it errors - we can still get the ID
-            try {
-              await window.OneSignal.login(userId.toString());
-            } catch (loginError) {
-              console.warn('OneSignal: Login failed, but checking if ID was generated anyway:', loginError);
-            }
-
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Check for OneSignal ID - it may have been generated even if login "failed"
-            const newOnesignalId = await window.OneSignal.User.onesignalId;
-            console.log('OneSignal: After re-login attempt, OneSignal ID:', newOnesignalId);
-
-            if (newOnesignalId) {
-              // Send to backend
-              const config = useRuntimeConfig();
-              const apiBase = config.public.apiBaseUrl;
-              const token = localStorage.getItem('authToken');
-
-              await fetch(`${apiBase}/update_onesignal_id.php`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ onesignal_id: newOnesignalId })
-              });
-              console.log('OneSignal: Fixed! New ID sent to backend');
-              return true;
-            } else {
-              console.error('OneSignal: Re-login failed to generate OneSignal ID');
-              return false;
-            }
+            // Clear the broken OneSignal ID from database so backend uses external user ID
+            await fetch(`${apiBase}/update_onesignal_id.php`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ onesignal_id: null })
+            });
+            console.log('OneSignal: Cleared broken ID from database, backend will use external user ID');
           } catch (error) {
-            console.error('OneSignal: Failed to fix broken state:', error);
-
-            // Last attempt - check if we somehow got an ID anyway
-            const finalId = await window.OneSignal.User.onesignalId;
-            if (finalId) {
-              console.log('OneSignal: Found ID despite errors:', finalId);
-              const config = useRuntimeConfig();
-              const apiBase = config.public.apiBaseUrl;
-              const token = localStorage.getItem('authToken');
-
-              await fetch(`${apiBase}/update_onesignal_id.php`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ onesignal_id: finalId })
-              });
-              console.log('OneSignal: Recovered! ID sent to backend');
-              return true;
-            }
-
-            return false;
+            console.error('OneSignal: Failed to clear broken ID:', error);
           }
+
+          return false;
         }
 
         // Valid state - send ID to backend if we have it
