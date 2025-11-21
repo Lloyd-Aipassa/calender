@@ -82,6 +82,27 @@ export const useOneSignal = () => {
         const onesignalId = await window.OneSignal.User.onesignalId;
         console.log('OneSignal: Login successful! OneSignal ID:', onesignalId);
 
+        // Send OneSignal ID to backend
+        if (onesignalId) {
+          try {
+            const config = useRuntimeConfig();
+            const apiBase = config.public.apiBaseUrl;
+            const token = localStorage.getItem('authToken');
+
+            await fetch(`${apiBase}/update_onesignal_id.php`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ onesignal_id: onesignalId })
+            });
+            console.log('OneSignal: ID sent to backend');
+          } catch (error) {
+            console.error('OneSignal: Failed to send ID to backend:', error);
+          }
+        }
+
         return true;
       } catch (error) {
         console.error('OneSignal: Login error:', error);
@@ -91,6 +112,26 @@ export const useOneSignal = () => {
         // The backend can send to the OneSignal ID directly even without external ID link
         if (currentId) {
           console.log('OneSignal: Login failed but have valid ID:', currentId, '- continuing anyway');
+
+          // Send OneSignal ID to backend so it can send notifications directly
+          try {
+            const config = useRuntimeConfig();
+            const apiBase = config.public.apiBaseUrl;
+            const token = localStorage.getItem('authToken');
+
+            await fetch(`${apiBase}/update_onesignal_id.php`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ onesignal_id: currentId })
+            });
+            console.log('OneSignal: ID sent to backend');
+          } catch (error) {
+            console.error('OneSignal: Failed to send ID to backend:', error);
+          }
+
           return true;
         }
         return false;
