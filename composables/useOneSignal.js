@@ -23,6 +23,10 @@ export const useOneSignal = () => {
 
       console.log('OneSignal: SDK loaded successfully');
 
+      // Check if we have a valid OneSignal ID first
+      const currentId = await window.OneSignal.User.onesignalId;
+      console.log('OneSignal: Current ID before login:', currentId);
+
       // Get subscription info
       const isPushSupported = await window.OneSignal.Notifications.isPushSupported();
       const permission = await window.OneSignal.Notifications.permission;
