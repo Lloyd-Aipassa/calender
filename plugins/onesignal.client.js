@@ -1,16 +1,16 @@
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
 
-  if (process.client) {
+  if (import.meta.client) {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
     window.OneSignalDeferred.push(async function(OneSignal) {
+      // IMPORTANT: Don't specify serviceWorkerPath here!
+      // OneSignal v16 will automatically use its own hosted Service Worker
+      // which is what we want for proper push notification support
       await OneSignal.init({
         appId: config.public.oneSignalAppId,
         allowLocalhostAsSecureOrigin: true,
-        serviceWorkerPath: '/OneSignalSDKWorker.js',
-        serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
-        path: '/',
         notifyButton: {
           enable: false, // We'll handle our own permission prompt
         },
