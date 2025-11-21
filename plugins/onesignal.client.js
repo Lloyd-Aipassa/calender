@@ -9,6 +9,8 @@ export default defineNuxtPlugin(() => {
       await OneSignal.init({
         appId: appId,
         allowLocalhostAsSecureOrigin: true,
+        serviceWorkerParam: { scope: '/' },
+        serviceWorkerPath: 'OneSignalSDKWorker.js',
         notifyButton: {
           enable: false,
         },
