@@ -1,12 +1,13 @@
 export default defineNuxtPlugin(() => {
-  const config = useRuntimeConfig();
-
   if (import.meta.client) {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
     window.OneSignalDeferred.push(async function(OneSignal) {
+      const appId = '6cb000af-0fa3-4599-bae3-ab376c12bb36';
+      console.log('OneSignal: Initializing with App ID:', appId);
+
       await OneSignal.init({
-        appId: config.public.oneSignalAppId,
+        appId: appId,
         allowLocalhostAsSecureOrigin: true,
         notifyButton: {
           enable: false,
