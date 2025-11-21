@@ -61,6 +61,70 @@ export const useOneSignal = () => {
         console.log('OneSignal: User already logged in with correct ID');
         const onesignalId = await window.OneSignal.User.onesignalId;
         console.log('OneSignal: Current OneSignal ID:', onesignalId);
+
+        // CRITICAL: Check if subscription is in broken state (external ID set but no OneSignal ID)
+        if (!onesignalId || onesignalId === 'undefined') {
+          console.warn('OneSignal: BROKEN STATE DETECTED - External ID set but no OneSignal ID!');
+          console.log('OneSignal: Attempting to fix by logging out and back in...');
+
+          try {
+            await window.OneSignal.logout();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log('OneSignal: Logged out, now logging back in...');
+
+            await window.OneSignal.login(userId.toString());
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const newOnesignalId = await window.OneSignal.User.onesignalId;
+            console.log('OneSignal: After re-login, OneSignal ID:', newOnesignalId);
+
+            if (newOnesignalId) {
+              // Send to backend
+              const config = useRuntimeConfig();
+              const apiBase = config.public.apiBaseUrl;
+              const token = localStorage.getItem('authToken');
+
+              await fetch(`${apiBase}/update_onesignal_id.php`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ onesignal_id: newOnesignalId })
+              });
+              console.log('OneSignal: Fixed! New ID sent to backend');
+              return true;
+            } else {
+              console.error('OneSignal: Re-login failed to generate OneSignal ID');
+              return false;
+            }
+          } catch (error) {
+            console.error('OneSignal: Failed to fix broken state:', error);
+            return false;
+          }
+        }
+
+        // Valid state - send ID to backend if we have it
+        if (onesignalId) {
+          try {
+            const config = useRuntimeConfig();
+            const apiBase = config.public.apiBaseUrl;
+            const token = localStorage.getItem('authToken');
+
+            await fetch(`${apiBase}/update_onesignal_id.php`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ onesignal_id: onesignalId })
+            });
+            console.log('OneSignal: ID sent to backend');
+          } catch (error) {
+            console.error('OneSignal: Failed to send ID to backend:', error);
+          }
+        }
+
         return true;
       }
 
