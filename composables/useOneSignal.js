@@ -45,6 +45,25 @@ export const useOneSignal = () => {
         console.log('OneSignal: Permission result:', result);
       }
 
+      // Check if user is already logged in with this external ID
+      const currentExternalId = await window.OneSignal.User.getExternalId();
+      console.log('OneSignal: Current external ID:', currentExternalId);
+
+      if (currentExternalId === userId.toString()) {
+        console.log('OneSignal: User already logged in with correct ID');
+        const onesignalId = await window.OneSignal.User.onesignalId;
+        console.log('OneSignal: Current OneSignal ID:', onesignalId);
+        return true;
+      }
+
+      // User not logged in or wrong ID, need to login
+      // If there's an existing session with different ID, logout first
+      if (currentExternalId && currentExternalId !== userId.toString()) {
+        console.log('OneSignal: Different user logged in, logging out first...');
+        await window.OneSignal.logout();
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
       // Set external user ID using login (this is the correct way in v16)
       // This links the browser to your user ID so backend can send to this user
       try {
@@ -57,8 +76,8 @@ export const useOneSignal = () => {
 
         return true;
       } catch (error) {
-        // Don't throw - user may already be logged in
         console.error('OneSignal: Login error:', error);
+        console.error('OneSignal: Error details:', JSON.stringify(error, null, 2));
         return false;
       }
     } catch (error) {
