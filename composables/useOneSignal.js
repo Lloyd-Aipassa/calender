@@ -28,8 +28,15 @@ export const useOneSignal = () => {
 
       console.log('OneSignal: SDK fully ready');
 
-      // Check if we have a valid OneSignal ID first
-      const currentId = await window.OneSignal.User.onesignalId;
+      // Wait for OneSignal to get an ID (may take a moment)
+      let currentId = await window.OneSignal.User.onesignalId;
+      let retries = 0;
+      while (!currentId && retries < 10) {
+        console.log('OneSignal: Waiting for ID...', retries + 1);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        currentId = await window.OneSignal.User.onesignalId;
+        retries++;
+      }
       console.log('OneSignal: Current ID before login:', currentId);
 
       // Get subscription info
