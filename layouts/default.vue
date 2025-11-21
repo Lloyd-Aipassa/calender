@@ -53,11 +53,17 @@ onMounted(async () => {
         const data = await response.json();
 
         if (data.success && data.user) {
+          console.log('User authenticated, initializing services for user:', data.user.id);
+
           const result = await initPusher(data.user.id, apiBase);
+          console.log('Pusher initialized');
 
           // Link user to OneSignal for push notifications
+          console.log('Calling linkUserToOneSignal...');
           await linkUserToOneSignal(data.user.id);
+          console.log('linkUserToOneSignal completed');
         } else {
+          console.log('User authentication failed or no user data');
         }
       } else {
       }
