@@ -129,6 +129,26 @@
         </div>
       </div>
 
+      <!-- Notificaties sectie -->
+      <div class="section">
+        <h3>Notificaties</h3>
+        <p class="description">
+          Zorg ervoor dat je altijd notificaties ontvangt, zelfs als de app afgesloten is.
+        </p>
+
+        <div class="notification-help">
+          <h4>📱 Android: Battery Optimization uitzetten</h4>
+          <p>Om notificaties te ontvangen wanneer de app afgesloten is:</p>
+          <ol>
+            <li>Ga naar <strong>Instellingen</strong> → <strong>Apps</strong></li>
+            <li>Zoek <strong>Chrome</strong> (of de browser waarin je de app gebruikt)</li>
+            <li>Tik op <strong>Batterij</strong> of <strong>Battery optimization</strong></li>
+            <li>Selecteer <strong>Unrestricted</strong> of <strong>Don't optimize</strong></li>
+          </ol>
+          <p class="note">💡 Dit zorgt ervoor dat de app notificaties kan ontvangen, zelfs als hij helemaal afgesloten is.</p>
+        </div>
+      </div>
+
       <!-- Developer Tools sectie -->
       <div class="section">
         <h3>Developer Tools</h3>
@@ -779,5 +799,37 @@ input:checked + .slider {
 
 input:checked + .slider:before {
   transform: translateX(26px);
+}
+
+/* Notification help styles */
+.notification-help {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.notification-help h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+}
+
+.notification-help ol {
+  margin: 15px 0;
+  padding-left: 20px;
+}
+
+.notification-help li {
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.notification-help .note {
+  margin: 15px 0 0 0;
+  padding: 10px;
+  background: #fff;
+  border-left: 4px solid #ffc107;
+  font-size: 14px;
+  color: #666;
 }
 </style>
