@@ -17,7 +17,7 @@ const apiBase = config.public.apiBaseUrl;
 
 // Initialize global Pusher service
 const { initPusher } = usePusher();
-const { linkUserToOneSignal } = useOneSignal();
+const { linkUserToOneSignal, setupJWTRefreshHandler } = useOneSignal();
 
 onMounted(async () => {
   // Auto-enable Eruda if it was enabled in settings
@@ -54,8 +54,11 @@ onMounted(async () => {
         if (data.success && data.user) {
           const result = await initPusher(data.user.id, apiBase);
 
-          // Link user to OneSignal for push notifications
+          // Link user to OneSignal for push notifications with JWT
           await linkUserToOneSignal(data.user.id);
+
+          // Setup JWT refresh handler to automatically renew tokens
+          setupJWTRefreshHandler(data.user.id);
         } else {
         }
       } else {
