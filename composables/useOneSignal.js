@@ -72,11 +72,18 @@ export const useOneSignal = () => {
             await new Promise(resolve => setTimeout(resolve, 1000));
             console.log('OneSignal: Logged out, now logging back in...');
 
-            await window.OneSignal.login(userId.toString());
+            // Try login, but don't fail if it errors - we can still get the ID
+            try {
+              await window.OneSignal.login(userId.toString());
+            } catch (loginError) {
+              console.warn('OneSignal: Login failed, but checking if ID was generated anyway:', loginError);
+            }
+
             await new Promise(resolve => setTimeout(resolve, 1000));
 
+            // Check for OneSignal ID - it may have been generated even if login "failed"
             const newOnesignalId = await window.OneSignal.User.onesignalId;
-            console.log('OneSignal: After re-login, OneSignal ID:', newOnesignalId);
+            console.log('OneSignal: After re-login attempt, OneSignal ID:', newOnesignalId);
 
             if (newOnesignalId) {
               // Send to backend
@@ -100,6 +107,27 @@ export const useOneSignal = () => {
             }
           } catch (error) {
             console.error('OneSignal: Failed to fix broken state:', error);
+
+            // Last attempt - check if we somehow got an ID anyway
+            const finalId = await window.OneSignal.User.onesignalId;
+            if (finalId) {
+              console.log('OneSignal: Found ID despite errors:', finalId);
+              const config = useRuntimeConfig();
+              const apiBase = config.public.apiBaseUrl;
+              const token = localStorage.getItem('authToken');
+
+              await fetch(`${apiBase}/update_onesignal_id.php`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ onesignal_id: finalId })
+              });
+              console.log('OneSignal: Recovered! ID sent to backend');
+              return true;
+            }
+
             return false;
           }
         }
