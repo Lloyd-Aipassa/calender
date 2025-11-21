@@ -1,43 +1,12 @@
-// OneSignal composable with JWT Identity Verification
+// OneSignal composable to link user to OneSignal player
 export const useOneSignal = () => {
-  const config = useRuntimeConfig();
-  const apiBase = config.public.apiBaseUrl;
-
-  // Fetch JWT token from backend
-  const fetchOneSignalJWT = async (userId) => {
-    try {
-      const authToken = localStorage.getItem('authToken');
-      const response = await fetch(`${apiBase}/get_onesignal_token.php`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
-      });
-
-      if (!response.ok) {
-        console.error('OneSignal: Failed to fetch JWT token');
-        return null;
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        console.log('OneSignal: JWT token fetched successfully');
-        return data.jwt;
-      }
-
-      return null;
-    } catch (error) {
-      console.error('OneSignal: Error fetching JWT:', error);
-      return null;
-    }
-  };
-
   const linkUserToOneSignal = async (userId) => {
     if (typeof window === 'undefined') {
       console.log('OneSignal: Not in browser environment');
       return;
     }
 
-    console.log('OneSignal: Starting JWT-based login for user:', userId);
+    console.log('OneSignal: Starting login for user:', userId);
 
     try {
       // Wait for OneSignal to load
@@ -54,6 +23,10 @@ export const useOneSignal = () => {
 
       console.log('OneSignal: SDK loaded successfully');
 
+      // Check if we have a valid OneSignal ID first
+      const currentId = await window.OneSignal.User.onesignalId;
+      console.log('OneSignal: Current ID before login:', currentId);
+
       // Get subscription info
       const isPushSupported = await window.OneSignal.Notifications.isPushSupported();
       const permission = await window.OneSignal.Notifications.permission;
@@ -67,29 +40,19 @@ export const useOneSignal = () => {
         console.log('OneSignal: Permission result:', result);
       }
 
-      // Fetch JWT token from backend
-      const jwt = await fetchOneSignalJWT(userId);
-      if (!jwt) {
-        console.error('OneSignal: Failed to get JWT token from backend');
-        return false;
-      }
-
-      // Login with JWT (Identity Verification enabled)
+      // Set external user ID using login (this is the correct way in v16)
+      // This links the browser to your user ID so backend can send to this user
       try {
-        console.log('OneSignal: Logging in with JWT for user ID:', userId);
-        await window.OneSignal.login(userId.toString(), jwt);
+        console.log('OneSignal: Logging in with user ID:', userId);
+        await window.OneSignal.login(userId.toString());
 
         // Get OneSignal player ID for debugging
         const onesignalId = await window.OneSignal.User.onesignalId;
-        console.log('OneSignal: JWT login successful! OneSignal ID:', onesignalId);
-
-        // Set up JWT refresh handler for when token expires
-        window.OneSignal.User.PushSubscription.addEventListener('change', async (event) => {
-          console.log('OneSignal: Subscription changed:', event);
-        });
+        console.log('OneSignal: Login successful! OneSignal ID:', onesignalId);
 
         return true;
       } catch (error) {
+        // Don't throw - user may already be logged in
         console.error('OneSignal: Login error:', error);
         return false;
       }
@@ -99,25 +62,7 @@ export const useOneSignal = () => {
     }
   };
 
-  // Handle JWT invalidation (when token expires)
-  const setupJWTRefreshHandler = (userId) => {
-    if (typeof window === 'undefined' || !window.OneSignal) return;
-
-    // This will be called when OneSignal needs a fresh JWT
-    window.OneSignal.User.addEventListener('subscriptionChange', async (event) => {
-      console.log('OneSignal: JWT may need refresh, fetching new token...');
-
-      const newJWT = await fetchOneSignalJWT(userId);
-      if (newJWT) {
-        console.log('OneSignal: Updating JWT token');
-        // OneSignal will automatically use the new JWT on next API call
-        await window.OneSignal.login(userId.toString(), newJWT);
-      }
-    });
-  };
-
   return {
-    linkUserToOneSignal,
-    setupJWTRefreshHandler
+    linkUserToOneSignal
   };
 };
