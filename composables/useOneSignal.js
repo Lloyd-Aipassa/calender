@@ -46,7 +46,8 @@ export const useOneSignal = () => {
       }
 
       // Check if user is already logged in with this external ID
-      const currentExternalId = await window.OneSignal.User.getExternalId();
+      // In SDK v16, externalId is a property, not a function
+      const currentExternalId = window.OneSignal.User.externalId;
       console.log('OneSignal: Current external ID:', currentExternalId);
 
       if (currentExternalId === userId.toString()) {
