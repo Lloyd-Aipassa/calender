@@ -9,19 +9,24 @@ export const useOneSignal = () => {
     console.log('OneSignal: Starting login for user:', userId);
 
     try {
-      // Wait for OneSignal to load AND be fully initialized
-      let attempts = 0;
-      while ((!window.OneSignal || !window.OneSignal.User) && attempts < 100) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
-      }
+      // Wait for OneSignal to fully initialize using their deferred promise
+      await new Promise((resolve) => {
+        if (window.OneSignal && window.OneSignal.User) {
+          console.log('OneSignal: Already initialized');
+          resolve();
+        } else {
+          window.OneSignalDeferred = window.OneSignalDeferred || [];
+          window.OneSignalDeferred.push(() => {
+            console.log('OneSignal: Deferred initialization complete');
+            resolve();
+          });
+        }
+      });
 
-      if (!window.OneSignal || !window.OneSignal.User) {
-        console.error('OneSignal: Failed to initialize after 100 attempts');
-        return;
-      }
+      // Additional wait to ensure everything is ready
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      console.log('OneSignal: SDK loaded and initialized');
+      console.log('OneSignal: SDK fully ready');
 
       // Check if we have a valid OneSignal ID first
       const currentId = await window.OneSignal.User.onesignalId;
