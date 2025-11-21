@@ -74,8 +74,11 @@ async function showGlobalNotification(messageData) {
 
 export const usePusher = () => {
   const initPusher = async (userId, apiBase) => {
+    console.log('Pusher: Initializing for user:', userId);
+
     // Check if there's already a Pusher instance (from Calendar.vue or previous init)
     if (pusherInstance) {
+      console.log('Pusher: Already initialized, checking user channel');
 
       // But still subscribe to user channel if not already done
       if (!userChannel) {
@@ -123,9 +126,11 @@ export const usePusher = () => {
     });
 
     pusherInstance.connection.bind('connected', () => {
+      console.log('Pusher: Connected to server');
     });
 
     pusherInstance.connection.bind('error', (err) => {
+      console.error('Pusher: Connection error:', err);
     });
 
     // Subscribe to user-level channel for notifications (like Calendar.vue does)
@@ -134,9 +139,11 @@ export const usePusher = () => {
     userChannel = pusherInstance.subscribe(userChannelName);
 
     userChannel.bind('pusher:subscription_succeeded', () => {
+      console.log('Pusher: Subscribed to user channel:', userChannelName);
     });
 
     userChannel.bind('pusher:subscription_error', (err) => {
+      console.error('Pusher: Subscription error for user channel:', err);
     });
 
     // Listen for chat messages on user channel (for notifications)
