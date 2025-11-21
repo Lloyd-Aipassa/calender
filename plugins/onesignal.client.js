@@ -9,14 +9,21 @@ export default defineNuxtPlugin(() => {
       await OneSignal.init({
         appId: appId,
         allowLocalhostAsSecureOrigin: true,
-        serviceWorkerParam: { scope: '/' },
-        serviceWorkerPath: 'OneSignalSDKWorker.js',
         notifyButton: {
           enable: false,
         },
       });
 
-      console.log('OneSignal: Initialized successfully');
+      console.log('OneSignal: Initialized with config');
+
+      // Request notification permission on load
+      const permission = await OneSignal.Notifications.permission;
+      console.log('OneSignal: Initial permission check:', permission);
+
+      if (!permission) {
+        console.log('OneSignal: Requesting notification permission...');
+        await OneSignal.Notifications.requestPermission();
+      }
     });
   }
 
