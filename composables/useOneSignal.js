@@ -6,7 +6,7 @@ export const useOneSignal = () => {
       return;
     }
 
-    console.log('OneSignal: Starting login for user:', userId);
+    console.log('OneSignal: Starting login for user:', userId, '(v2)');
 
     try {
       // Wait for OneSignal to fully initialize using their deferred promise
