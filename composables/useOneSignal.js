@@ -86,6 +86,13 @@ export const useOneSignal = () => {
       } catch (error) {
         console.error('OneSignal: Login error:', error);
         console.error('OneSignal: Error details:', JSON.stringify(error, null, 2));
+
+        // Even if login fails, if we have a valid OneSignal ID, we can still receive notifications
+        // The backend can send to the OneSignal ID directly even without external ID link
+        if (currentId) {
+          console.log('OneSignal: Login failed but have valid ID:', currentId, '- continuing anyway');
+          return true;
+        }
         return false;
       }
     } catch (error) {
