@@ -1,16 +1,8 @@
-// Global flag to prevent multiple OneSignal logins
-let oneSignalLinked = false;
-
 // OneSignal composable to link user to OneSignal player
 export const useOneSignal = () => {
   const linkUserToOneSignal = async (userId) => {
     if (typeof window === 'undefined') {
       return;
-    }
-
-    // Prevent multiple calls
-    if (oneSignalLinked) {
-      return true;
     }
 
     try {
@@ -41,11 +33,9 @@ export const useOneSignal = () => {
         // Get OneSignal player ID for debugging
         const onesignalId = await window.OneSignal.User.onesignalId;
 
-        oneSignalLinked = true;
         return true;
       } catch (error) {
         // Don't throw - user may already be logged in
-        oneSignalLinked = true; // Mark as done even if error
         return false;
       }
     } catch (error) {
