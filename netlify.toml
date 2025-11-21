@@ -6,6 +6,19 @@
   # Deze publieke API URL mag in de build output staan
   SECRETS_SCAN_OMIT_KEYS = "NUXT_PUBLIC_API_BASE_URL"
 
+# OneSignal Service Worker - MOET correct MIME type hebben
+[[headers]]
+  for = "/OneSignalSDKWorker.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "max-age=0"
+
+[[headers]]
+  for = "/OneSignalSDKUpdaterWorker.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "max-age=0"
+
 [[headers]]
   for = "/_nuxt/builds/meta/*"
   [headers.values]
