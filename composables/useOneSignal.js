@@ -9,19 +9,19 @@ export const useOneSignal = () => {
     console.log('OneSignal: Starting login for user:', userId);
 
     try {
-      // Wait for OneSignal to load
+      // Wait for OneSignal to load AND be fully initialized
       let attempts = 0;
-      while (!window.OneSignal && attempts < 50) {
+      while ((!window.OneSignal || !window.OneSignal.User) && attempts < 100) {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
       }
 
-      if (!window.OneSignal) {
-        console.error('OneSignal: Failed to load after 50 attempts');
+      if (!window.OneSignal || !window.OneSignal.User) {
+        console.error('OneSignal: Failed to initialize after 100 attempts');
         return;
       }
 
-      console.log('OneSignal: SDK loaded successfully');
+      console.log('OneSignal: SDK loaded and initialized');
 
       // Check if we have a valid OneSignal ID first
       const currentId = await window.OneSignal.User.onesignalId;
