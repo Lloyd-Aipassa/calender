@@ -480,18 +480,17 @@ function getUserInfoFromToken() {
   }
 }
 
-// Service Worker registration reference (OneSignal registreert de Service Worker)
+// Service Worker registration reference
 let swRegistration = null;
 
-// Get Service Worker registration (OneSignal already registered it)
-async function getServiceWorkerRegistration() {
+// Register Service Worker voor push notificaties
+async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) {
     return null;
   }
 
   try {
-    // Wait for OneSignal's Service Worker to be ready
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await navigator.serviceWorker.register('/sw.js');
     swRegistration = registration;
     return registration;
   } catch (error) {
@@ -659,8 +658,8 @@ onMounted(async () => {
   } catch (error) {
   }
 
-  // Get Service Worker registration (OneSignal already registered it)
-  await getServiceWorkerRegistration();
+  // Register Service Worker voor push notificaties
+  await registerServiceWorker();
 
   // Vraag notificatie permissies
   await requestNotificationPermission();
