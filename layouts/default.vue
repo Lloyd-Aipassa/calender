@@ -1,6 +1,7 @@
 <template>
   <div class="app-layout">
     <NavigationHeader />
+    
     <div class="content-spacer"></div>
     <main class="main-content">
       <slot />
