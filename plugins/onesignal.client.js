@@ -8,11 +8,12 @@ export default defineNuxtPlugin(() => {
       await OneSignal.init({
         appId: config.public.oneSignalAppId,
         allowLocalhostAsSecureOrigin: true,
+        serviceWorkerParam: { scope: '/' },
+        serviceWorkerPath: 'OneSignalSDKWorker.js',
         notifyButton: {
           enable: false, // We'll handle our own permission prompt
         },
       });
-
 
       // Request notification permission on load
       const permission = await OneSignal.Notifications.permission;
