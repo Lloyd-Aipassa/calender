@@ -1,0 +1,2 @@
+# Redirect OneSignal service worker requests to their CDN
+/OneSignalSDKWorker.js https://cdn.onesignal.com/sdks/web/v16/OneSignalSDKWorker.js 200
