@@ -34,6 +34,7 @@ defineEmits(['settings', 'add-event', 'logout']);
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  padding-top: 10px;
 }
 
 .header-left {

@@ -27,6 +27,7 @@
         <button @click="logout" class="logout-btn">Uitloggen</button>
       </div>
     </div>
+    <div class="nav-spacer"></div>
   </header>
 </template>
 
@@ -148,6 +149,10 @@ function logout() {
   color: #333;
 }
 
+.nav-spacer {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .nav-header {
     position: fixed;
@@ -158,7 +163,8 @@ function logout() {
     border-bottom: none;
     border-top: 1px solid #e0e0e0;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-    z-index: 1001;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .nav-container {

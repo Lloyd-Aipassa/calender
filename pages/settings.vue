@@ -24,20 +24,29 @@
                 <p v-else class="status disconnected">Niet gekoppeld</p>
               </div>
             </div>
-            <button
-              v-if="!googleConnected"
-              @click="connectGoogle"
-              class="btn btn-primary"
-              :disabled="isLoading">
-              {{ isLoading ? 'Bezig...' : 'Koppelen' }}
-            </button>
-            <button
-              v-else
-              @click="disconnectGoogle"
-              class="btn btn-secondary"
-              :disabled="isLoading">
-              Ontkoppelen
-            </button>
+            <div class="connection-actions">
+              <button
+                v-if="!googleConnected"
+                @click="connectGoogle"
+                class="btn btn-primary"
+                :disabled="isLoading">
+                {{ isLoading ? 'Bezig...' : 'Koppelen' }}
+              </button>
+              <template v-else>
+                <button
+                  @click="connectGoogle"
+                  class="btn btn-primary"
+                  :disabled="isLoading">
+                  {{ isLoading ? 'Bezig...' : 'Vernieuwen' }}
+                </button>
+                <button
+                  @click="disconnectGoogle"
+                  class="btn btn-secondary"
+                  :disabled="isLoading">
+                  Ontkoppelen
+                </button>
+              </template>
+            </div>
           </div>
 
           <!-- Outlook Calendar -->
@@ -276,8 +285,20 @@ async function connectGoogle() {
     });
 
     if (response.success && response.auth_url) {
-      // Redirect naar Google OAuth
-      window.location.href = response.auth_url;
+      // Check if running as native app
+      const { Capacitor } = await import('@capacitor/core');
+
+      if (Capacitor.isNativePlatform()) {
+        // Use Browser plugin for native apps (Android/iOS)
+        const { Browser } = await import('@capacitor/browser');
+        await Browser.open({
+          url: response.auth_url,
+          windowName: '_self'
+        });
+      } else {
+        // Use standard redirect for web
+        window.location.href = response.auth_url;
+      }
     } else {
       error.value = 'Kon koppeling niet starten';
     }
@@ -438,9 +459,12 @@ function toggleDebug() {
       document.body.appendChild(script);
       script.onload = () => {
         window.eruda.init();
+        // Move Eruda button above safe area
+        fixErudaPosition();
       };
     } else {
       window.eruda.show();
+      fixErudaPosition();
     }
   } else {
     // Disable Eruda
@@ -448,6 +472,47 @@ function toggleDebug() {
       window.eruda.hide();
     }
   }
+}
+
+function fixErudaPosition() {
+  // Wait for Eruda to be fully loaded and try multiple times
+  const applyStyle = () => {
+    // Remove old style if it exists
+    const oldStyle = document.getElementById('eruda-custom-style');
+    if (oldStyle) {
+      oldStyle.remove();
+    }
+
+    const style = document.createElement('style');
+    style.id = 'eruda-custom-style';
+    style.textContent = `
+      .eruda-container .eruda-entry-btn {
+        position: fixed !important;
+        bottom: 100px !important;
+        left: 10px !important;
+        right: auto !important;
+        transform: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Also try to modify the element directly
+    const erudaBtn = document.querySelector('.eruda-entry-btn');
+    if (erudaBtn) {
+      erudaBtn.style.setProperty('position', 'fixed', 'important');
+      erudaBtn.style.setProperty('bottom', '100px', 'important');
+      erudaBtn.style.setProperty('left', '10px', 'important');
+      erudaBtn.style.setProperty('right', 'auto', 'important');
+      erudaBtn.style.setProperty('transform', 'none', 'important');
+    }
+  };
+
+  // Try multiple times to ensure it sticks
+  setTimeout(applyStyle, 100);
+  setTimeout(applyStyle, 300);
+  setTimeout(applyStyle, 500);
+  setTimeout(applyStyle, 1000);
+  setTimeout(applyStyle, 2000);
 }
 
 function refreshApp() {
@@ -509,6 +574,11 @@ h2 {
   display: flex;
   align-items: center;
   gap: 15px;
+}
+
+.connection-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .icon {

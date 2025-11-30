@@ -310,9 +310,14 @@ function logout() {
 
 // Event CRUD operations
 async function saveEvent() {
+  console.log('saveEvent called');
+  console.log('editingEvent:', editingEvent.value);
+  console.log('eventForm:', eventForm.value);
+
   try {
     if (editingEvent.value) {
       // Update existing event
+      console.log('Updating existing event...');
       const updatedEvent = { ...eventForm.value, id: editingEvent.value.id };
 
       await updateEventAPI(updatedEvent);
@@ -326,7 +331,9 @@ async function saveEvent() {
       alert('Afspraak bijgewerkt!');
     } else {
       // Add new event - check if form is filled
+      console.log('Adding new event...');
       if (!eventForm.value.title || !eventForm.value.date || !eventForm.value.time) {
+        console.log('Validation failed - missing fields');
         alert('Vul alle velden in!');
         return;
       }
@@ -338,7 +345,9 @@ async function saveEvent() {
         description: eventForm.value.description,
       };
 
+      console.log('Calling createEventAPI with:', newEvent);
       const response = await createEventAPI(newEvent);
+      console.log('createEventAPI response:', response);
 
       if (response && response.success && response.event) {
         // Add to local events array with proper format
@@ -352,14 +361,17 @@ async function saveEvent() {
         };
 
         events.value.push(newEventFormatted);
+        console.log('Event added to local array');
 
         closeModal();
         alert('Afspraak toegevoegd!');
       } else {
+        console.log('Invalid response from API:', response);
         alert('Fout: Event niet correct opgeslagen');
       }
     }
   } catch (error) {
+    console.error('Error in saveEvent:', error);
     alert('Fout bij het opslaan van afspraak: ' + (error.message || 'Onbekende fout'));
     // Always close modal on error to prevent hanging
     closeModal();
@@ -706,6 +718,12 @@ onUnmounted(() => {
   padding-bottom: max(20px, env(safe-area-inset-bottom));
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100%;
+}
+
+@media (max-width: 768px) {
+  .calendar-container {
+    padding-top: 0;
+  }
 }
 
 .calendar-content {

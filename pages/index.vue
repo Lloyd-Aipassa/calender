@@ -2,11 +2,13 @@
 <template>
   <div v-if="isAuthenticated">
     <Calendar />
+    <Appointments />
   </div>
 </template>
 
 <script setup>
 import Calendar from '~/components/Calendar.vue';
+import Appointments from '~/components/appointments.vue';
 
 const isAuthenticated = ref(false);
 
