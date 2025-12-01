@@ -68,85 +68,44 @@ export const useOneSignal = () => {
             const subscriptionId = await window.plugins.OneSignal.User.pushSubscription.getIdAsync();
             console.log('OneSignal: Subscription ID:', subscriptionId);
 
-            // WORKAROUND for Cordova v5 bug: ALWAYS use REST API to set external ID
+            // WORKAROUND for Cordova v5 bug: ALWAYS use backend API to set external ID
             // The login() method has known issues where External ID doesn't persist on server
-            // Use the new User API endpoint for setting aliases
+            // Use backend endpoint that securely calls OneSignal REST API
             if (subscriptionId) {
-              console.log('OneSignal: Using REST API to ensure External ID is synced to server...');
+              console.log('OneSignal: Using backend API to ensure External ID is synced to server...');
               try {
-                const appId = '6cb000af-0fa3-4599-bae3-ab376c12bb36';
+                const config = useRuntimeConfig();
+                const apiBase = config.public.apiBaseUrl;
+                const token = localStorage.getItem('authToken');
                 const externalIdValue = 'user_' + userId.toString();
-                const apiUrl = `https://api.onesignal.com/apps/${appId}/subscriptions/${subscriptionId}/user/identity`;
 
-                console.log('OneSignal: API URL:', apiUrl);
+                console.log('OneSignal: Calling backend sync endpoint...');
 
-                const response = await fetch(apiUrl, {
-                  method: 'PATCH',
+                const response = await fetch(`${apiBase}/sync_onesignal_id.php`, {
+                  method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Basic os_v2_app_nsyablypuncztoxdvm3wyev3gzu5mv4nmvkef5mgnzychjberxqevkgmhj3s3ylte7aszztsfzoj4y432ii6zg4me6gbavm3zks5vfq'
+                    'Authorization': `Bearer ${token}`
                   },
                   body: JSON.stringify({
-                    identity: {
-                      external_id: externalIdValue
-                    }
+                    subscription_id: subscriptionId,
+                    external_id: externalIdValue,
+                    push_token: pushToken
                   })
                 });
 
                 const data = await response.json();
-                console.log('OneSignal: REST API response:', data);
-                console.log('OneSignal: REST API status:', response.status);
-
-                // Log detailed error if present
-                if (data.errors && data.errors.length > 0) {
-                  console.error('OneSignal: API errors:', JSON.stringify(data.errors));
-
-                  // If subscription not found (404), try creating it via user creation endpoint
-                  if (data.errors[0]?.code === 'subscription-0') {
-                    console.log('OneSignal: Subscription not found, creating via user endpoint...');
-                    try {
-                      const createUserUrl = `https://api.onesignal.com/apps/${appId}/users`;
-                      const createResponse = await fetch(createUserUrl, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': 'Basic os_v2_app_nsyablypuncztoxdvm3wyev3gzu5mv4nmvkef5mgnzychjberxqevkgmhj3s3ylte7aszztsfzoj4y432ii6zg4me6gbavm3zks5vfq'
-                        },
-                        body: JSON.stringify({
-                          identity: {
-                            external_id: externalIdValue
-                          },
-                          subscriptions: [
-                            {
-                              type: 'AndroidPush',
-                              token: pushToken,
-                              enabled: true
-                            }
-                          ]
-                        })
-                      });
-                      const createData = await createResponse.json();
-                      console.log('OneSignal: User creation response:', createData);
-                      if (createResponse.ok) {
-                        console.log('OneSignal: ✅ User created and External ID synced!');
-                      } else {
-                        console.error('OneSignal: User creation failed:', createData);
-                      }
-                    } catch (createError) {
-                      console.error('OneSignal: User creation error:', createError);
-                    }
-                  }
-                }
+                console.log('OneSignal: Backend API response:', data);
+                console.log('OneSignal: Backend API status:', response.status);
 
                 // Verify it worked
-                if (response.ok) {
+                if (response.ok && data.success) {
                   console.log('OneSignal: ✅ External User ID successfully synced to server!');
-                } else if (response.status !== 404) {
-                  console.error('OneSignal: ❌ REST API failed with status:', response.status);
-                  console.error('OneSignal: Full response:', JSON.stringify(data));
+                } else {
+                  console.error('OneSignal: ❌ Backend API failed:', data.error || 'Unknown error');
                 }
               } catch (apiError) {
-                console.error('OneSignal: REST API error:', apiError);
+                console.error('OneSignal: Backend API error:', apiError);
               }
             }
           } catch (error) {
