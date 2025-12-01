@@ -350,18 +350,8 @@ async function saveEvent() {
       console.log('createEventAPI response:', response);
 
       if (response && response.success && response.event) {
-        // Add to local events array with proper format
-        const newEventFormatted = {
-          id: response.event.id,
-          title: newEvent.title,
-          date: newEvent.date,
-          time: newEvent.time,
-          description: newEvent.description,
-          creator: 'Jij',
-        };
-
-        events.value.push(newEventFormatted);
-        console.log('Event added to local array');
+        // Don't add to local array here - Pusher will handle it to avoid duplicates
+        console.log('Event created successfully, waiting for Pusher update');
 
         closeModal();
         alert('Afspraak toegevoegd!');
