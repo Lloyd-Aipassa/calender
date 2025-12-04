@@ -33,12 +33,12 @@
           </select>
         </div>
         <div class="modal-actions">
-          <button v-if="editingEvent" type="button" @click="$emit('delete')" class="btn-danger">
+          <button v-if="editingEvent" type="button" @click="$emit('delete')" class="btn-danger" :disabled="isSaving">
             Verwijderen
           </button>
-          <button type="button" @click="$emit('close')" class="btn-secondary">Annuleren</button>
-          <button type="submit" class="btn-primary">
-            {{ editingEvent ? 'Bijwerken' : 'Toevoegen' }}
+          <button type="button" @click="$emit('close')" class="btn-secondary" :disabled="isSaving">Annuleren</button>
+          <button type="submit" class="btn-primary" :disabled="isSaving">
+            {{ isSaving ? 'Bezig...' : (editingEvent ? 'Bijwerken' : 'Toevoegen') }}
           </button>
         </div>
       </form>
@@ -59,6 +59,10 @@ const props = defineProps({
   formData: {
     type: Object,
     required: true
+  },
+  isSaving: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -143,8 +147,14 @@ defineEmits(['close', 'save', 'delete']);
   font-size: 14px;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background-color: #c80101;
+}
+
+.btn-primary:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .btn-secondary {
@@ -157,8 +167,14 @@ defineEmits(['close', 'save', 'delete']);
   font-size: 14px;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background-color: #545b62;
+}
+
+.btn-secondary:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .btn-danger {
@@ -171,8 +187,14 @@ defineEmits(['close', 'save', 'delete']);
   font-size: 14px;
 }
 
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
   background-color: #c82333;
+}
+
+.btn-danger:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 @media (max-width: 768px) {

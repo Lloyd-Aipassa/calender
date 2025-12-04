@@ -44,6 +44,7 @@
       :show="showAddEvent"
       :editing-event="editingEvent"
       :form-data="eventForm"
+      :is-saving="isSaving"
       @close="closeModal"
       @save="saveEvent"
       @delete="deleteEvent" />
@@ -63,6 +64,7 @@ const editingEvent = ref(null);
 const events = ref([]);
 const userName = ref('');
 const notificationsEnabled = ref(false);
+const isSaving = ref(false); // Prevent double-click on save button
 let pusherInstance = null;
 
 const eventForm = ref({
@@ -314,6 +316,14 @@ async function saveEvent() {
   console.log('editingEvent:', editingEvent.value);
   console.log('eventForm:', eventForm.value);
 
+  // Prevent double-click by disabling save button
+  if (isSaving.value) {
+    console.log('Already saving, ignoring duplicate click');
+    return;
+  }
+
+  isSaving.value = true;
+
   try {
     if (editingEvent.value) {
       // Update existing event
@@ -335,6 +345,7 @@ async function saveEvent() {
       if (!eventForm.value.title || !eventForm.value.date || !eventForm.value.time) {
         console.log('Validation failed - missing fields');
         alert('Vul alle velden in!');
+        isSaving.value = false;
         return;
       }
 
@@ -365,6 +376,8 @@ async function saveEvent() {
     alert('Fout bij het opslaan van afspraak: ' + (error.message || 'Onbekende fout'));
     // Always close modal on error to prevent hanging
     closeModal();
+  } finally {
+    isSaving.value = false;
   }
 }
 
