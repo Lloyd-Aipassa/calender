@@ -530,7 +530,7 @@ async function showNotification(title, options = {}) {
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     vibrate: [200, 100, 200],
-    requireInteraction: false,
+    requireInteraction: true,
     ...options,
   };
 
