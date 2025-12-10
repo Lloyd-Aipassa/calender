@@ -21,8 +21,8 @@
 defineProps({
   userName: {
     type: String,
-    default: ''
-  }
+    default: '',
+  },
 });
 
 defineEmits(['settings', 'add-event', 'logout']);
@@ -55,7 +55,7 @@ defineEmits(['settings', 'add-event', 'logout']);
 
 .user-name {
   margin: 0;
-  color: #1d1d1d;
+  color: #1d1d1d00;
   font-size: 16px;
   font-weight: 600;
 }
@@ -107,5 +107,11 @@ defineEmits(['settings', 'add-event', 'logout']);
 
 .btn-logout:hover {
   background-color: #c82333;
+}
+
+@media (max-width: 720px) {
+  .user-name {
+    color: #1d1d1d;
+  }
 }
 </style>

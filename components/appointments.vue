@@ -18,7 +18,7 @@
         </div>
         <div class="appointment-details">
           <div class="appointment-title">{{ event.title }}</div>
-          <div class="appointment-time">{{ event.time }}</div>
+          <div class="appointment-time">{{ formatTime(event.time) }}</div>
           <div v-if="event.description" class="appointment-description">
             {{ event.description }}
           </div>
@@ -51,7 +51,6 @@ async function loadUpcomingEvents() {
 
     // Filter events that are in the future
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const futureEvents = allEvents.filter(event => {
       const eventDateTime = new Date(`${event.date}T${event.time}`);
@@ -81,6 +80,13 @@ function formatMonth(dateString) {
   const date = new Date(dateString);
   const months = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
   return months[date.getMonth()];
+}
+
+function formatTime(timeString) {
+  // Remove seconds from time string (HH:MM:SS -> HH:MM)
+  if (!timeString) return '';
+  const parts = timeString.split(':');
+  return `${parts[0]}:${parts[1]}`;
 }
 
 onMounted(() => {

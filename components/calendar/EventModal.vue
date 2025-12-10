@@ -12,8 +12,12 @@
           <input v-model="formData.date" type="date" required />
         </div>
         <div class="form-group">
-          <label>Tijd:</label>
+          <label>Start tijd:</label>
           <input v-model="formData.time" type="time" required />
+        </div>
+        <div class="form-group">
+          <label>Eind tijd:</label>
+          <input v-model="formData.endTime" type="time" required />
         </div>
         <div class="form-group">
           <label>Beschrijving:</label>

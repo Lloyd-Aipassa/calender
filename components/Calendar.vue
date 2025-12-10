@@ -71,6 +71,7 @@ const eventForm = ref({
   title: '',
   date: '',
   time: '',
+  endTime: '',
   description: '',
   reminder_minutes: null,
 });
@@ -274,10 +275,12 @@ function selectDate(day) {
 
 function selectTimeSlot(date, hour) {
   const timeString = `${hour.toString().padStart(2, '0')}:00`;
+  const endTimeString = `${(hour + 1).toString().padStart(2, '0')}:00`;
   eventForm.value = {
     title: '',
     date: date,
     time: timeString,
+    endTime: endTimeString,
     description: '',
   };
   editingEvent.value = null;
@@ -293,7 +296,7 @@ function editEvent(event) {
 function closeModal() {
   showAddEvent.value = false;
   editingEvent.value = null;
-  eventForm.value = { title: '', date: '', time: '', description: '', reminder_minutes: null };
+  eventForm.value = { title: '', date: '', time: '', endTime: '', description: '', reminder_minutes: null };
 }
 
 function goToSettings() {
@@ -342,7 +345,7 @@ async function saveEvent() {
     } else {
       // Add new event - check if form is filled
       console.log('Adding new event...');
-      if (!eventForm.value.title || !eventForm.value.date || !eventForm.value.time) {
+      if (!eventForm.value.title || !eventForm.value.date || !eventForm.value.time || !eventForm.value.endTime) {
         console.log('Validation failed - missing fields');
         alert('Vul alle velden in!');
         isSaving.value = false;
@@ -353,7 +356,9 @@ async function saveEvent() {
         title: eventForm.value.title,
         date: eventForm.value.date,
         time: eventForm.value.time,
+        endTime: eventForm.value.endTime,
         description: eventForm.value.description,
+        reminder_minutes: eventForm.value.reminder_minutes,
       };
 
       console.log('Calling createEventAPI with:', newEvent);
