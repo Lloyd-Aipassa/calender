@@ -123,7 +123,7 @@ html, body {
   .app-layout {
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-    background-color: #1d1d1d;
+    background-color: #f5f5f5;
   }
 
   .main-content {
