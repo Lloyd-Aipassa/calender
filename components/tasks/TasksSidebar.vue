@@ -3,8 +3,8 @@
     <div class="sidebar-header">
       <h3>Mijn Lijsten</h3>
       <div class="sidebar-actions">
-        <button @click="goToSettings" class="btn-icon" title="Instellingen">
-          <img src="/svg/gear.svg" width="20" alt="Instellingen" />
+        <button @click="goToSettings" class="btn-icon gear" title="Instellingen">
+          <img src="/svg/gear.svg" width="28" alt="Instellingen" />
         </button>
         <button @click="$emit('show-new-list-modal')" class="btn-icon" title="Nieuwe lijst">+</button>
       </div>
@@ -180,6 +180,10 @@ function goToSettings() {
   cursor: pointer;
   font-size: 20px;
   transition: all 0.2s;
+}
+ .gear
+ {
+ background: #fa010100;
 }
 
 .btn-icon-small {
