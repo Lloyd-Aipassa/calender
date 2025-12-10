@@ -1,10 +1,13 @@
 <!-- pages/index.vue -->
 <template>
-  <div v-if="isAuthenticated">
-    <Calendar />
-    <!-- Desktop: sidebar is positioned inside calendar-container via CSS -->
-    <div class="appointments-wrapper">
-      <Appointments />
+  <div v-if="isAuthenticated" class="page-wrapper">
+    <div class="content-grid">
+      <aside class="sidebar-left">
+        <Appointments />
+      </aside>
+      <main class="main-calendar">
+        <Calendar />
+      </main>
     </div>
   </div>
 </template>
@@ -37,33 +40,61 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.appointments-wrapper {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px 20px 20px;
+.page-wrapper {
+  width: 100%;
 }
 
-/* Desktop/Laptop layout - sidebar links naast calendar-content */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "main"
+    "sidebar";
+  gap: 0;
+}
+
+.sidebar-left {
+  grid-area: sidebar;
+}
+
+.main-calendar {
+  grid-area: main;
+}
+
+/* Desktop/Laptop layout - sidebar links, calendar rechts */
 @media (min-width: 1200px) {
-  .appointments-wrapper {
-    position: fixed;
-    left: calc((100vw - 1200px) / 2); /* Align with calendar-container */
-    top: 280px; /* Below header and navigation */
-    width: 280px;
-    padding: 0;
-    max-height: calc(100vh - 200px);
+  .content-grid {
+    grid-template-columns: 280px 1fr;
+    grid-template-areas: "sidebar main";
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .sidebar-left {
+    position: sticky;
+    top: 105px;
+    max-height: calc(100vh - 40px);
     overflow-y: auto;
+  }
+}
+
+/* Tablet layout */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .content-grid {
+    padding: 15px;
   }
 }
 </style>
 
 <style>
-/* Global style to adjust calendar layout on desktop - make room for sidebar on left */
+/* Remove the old margin-left from calendar components on desktop */
 @media (min-width: 1200px) {
-  .calendar-container .calendar-header,
-  .calendar-container .calendar-nav,
-  .calendar-container .calendar-content {
-    margin-left: 300px; /* Make room for sidebar */
+  .calendar-container {
+    max-width: 100%;
+    padding: 0;
   }
 }
 </style>

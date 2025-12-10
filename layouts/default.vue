@@ -121,7 +121,6 @@ html, body {
 /* Mobile bottom navigation */
 @media (max-width: 768px) {
   .app-layout {
-    padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
     background-color: #f5f5f5;
   }
@@ -131,8 +130,12 @@ html, body {
   }
 }
 
-/* PWA Standalone Mode Styling */
+/* PWA Standalone Mode Styling - alleen extra padding voor status bar in PWA */
 @media all and (display-mode: standalone) {
+  .app-layout {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
   .nav-header {
     position: fixed !important;
     top: 0;
