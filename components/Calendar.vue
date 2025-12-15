@@ -724,21 +724,64 @@ onUnmounted(() => {
   padding: 20px;
   padding-top: max(20px, env(safe-area-inset-top));
   padding-bottom: max(20px, env(safe-area-inset-bottom));
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   min-height: 100%;
 }
 
 @media (max-width: 768px) {
   .calendar-container {
-    padding-top: 0;
+    padding: 0;
   }
 }
 
 .calendar-content {
-  box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
-  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
-  border-radius: 15px;
-  padding: 15px;
-  background-color: #fff;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  padding: 20px;
+  transition: box-shadow var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle gradient overlay */
+.calendar-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(180deg, var(--color-bg-secondary) 0%, transparent 100%);
+  opacity: 0.5;
+  pointer-events: none;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.calendar-content:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+@media (max-width: 768px) {
+  .calendar-content {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 16px;
+    box-shadow: none;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .calendar-content::before {
+    border-radius: 0;
+  }
+}
+
+/* Desktop refinements */
+@media (min-width: 1200px) {
+  .calendar-content {
+    padding: 24px;
+  }
 }
 </style>

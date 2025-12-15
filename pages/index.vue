@@ -42,6 +42,19 @@ onMounted(() => {
 <style scoped>
 .page-wrapper {
   width: 100%;
+  min-height: 100%;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .content-grid {
@@ -55,42 +68,88 @@ onMounted(() => {
 
 .sidebar-left {
   grid-area: sidebar;
+  animation: slideInLeft 0.6s ease-out 0.1s both;
 }
 
 .main-calendar {
   grid-area: main;
+  animation: slideInRight 0.6s ease-out 0.2s both;
 }
 
-/* Desktop/Laptop layout - sidebar links, calendar rechts */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Desktop/Laptop layout */
 @media (min-width: 1200px) {
   .content-grid {
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 300px 1fr;
     grid-template-areas: "sidebar main";
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 20px;
-    gap: 20px;
+    padding: 24px 32px;
+    gap: 28px;
     align-items: start;
   }
 
   .sidebar-left {
     position: sticky;
-    top: 105px;
+    top: 100px;
     max-height: calc(100vh - 40px);
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .sidebar-left::-webkit-scrollbar {
+    display: none;
   }
 }
 
 /* Tablet layout */
 @media (min-width: 768px) and (max-width: 1199px) {
   .content-grid {
-    padding: 15px;
+    padding: 20px;
+    gap: 20px;
+  }
+}
+
+/* Mobile layout */
+@media (max-width: 767px) {
+  .content-grid {
+    padding: 0;
+  }
+
+  .sidebar-left {
+    order: 2;
+  }
+
+  .main-calendar {
+    order: 1;
   }
 }
 </style>
 
 <style>
-/* Remove the old margin-left from calendar components on desktop */
+/* Global calendar styling for desktop */
 @media (min-width: 1200px) {
   .calendar-container {
     max-width: 100%;

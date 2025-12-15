@@ -46,77 +46,100 @@ defineEmits(['previous', 'next', 'view-change']);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .nav-controls {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
 }
 
 .view-controls {
   display: flex;
-  gap: 5px;
+  gap: 4px;
+  background: var(--color-bg-secondary);
+  padding: 4px;
+  border-radius: var(--radius-md);
 }
 
 .view-btn {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  color: #495057;
-  padding: 8px 16px;
-  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all var(--transition-fast);
 }
 
 .view-btn:hover {
-  background: #e9ecef;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
 }
 
 .view-btn.active {
-  background: #fa0101;
-  color: white;
-  border-color: #fa0101;
+  background: var(--color-surface);
+  color: var(--color-accent);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
 }
 
 .nav-btn {
-  background: #fa0101;
-  color: white;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--border-color);
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 18px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all var(--transition-fast);
+  font-weight: 300;
 }
 
 .nav-btn:hover {
-  background: #c80101;
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+  transform: scale(1.05);
+}
+
+.nav-btn:active {
+  transform: scale(0.98);
 }
 
 .calendar-nav h3 {
   margin: 0;
-  font-size: 20px;
-  color: #333;
-  min-width: 200px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  min-width: 220px;
   text-align: center;
+  letter-spacing: -0.01em;
 }
 
 @media (max-width: 768px) {
   .calendar-nav {
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+    padding: 0 4px;
   }
 
   .nav-controls {
     order: 2;
+    width: 100%;
+    justify-content: space-between;
   }
 
   .view-controls {
@@ -128,6 +151,18 @@ defineEmits(['previous', 'next', 'view-change']);
   .view-btn {
     flex: 1;
     text-align: center;
+    padding: 12px 10px;
+  }
+
+  .calendar-nav h3 {
+    font-size: 16px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .nav-btn {
+    width: 38px;
+    height: 38px;
   }
 }
 </style>

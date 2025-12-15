@@ -51,9 +51,9 @@ defineEmits(['update:filter', 'delete-all-completed']);
 
 <style scoped>
 .filter-section {
-  background: white;
-  padding: 15px 30px;
-  border-bottom: 1px solid #e0e0e0;
+  background: #ffffff;
+  padding: 16px 28px;
+  border-bottom: 1px solid rgba(26, 22, 20, 0.06);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -61,37 +61,53 @@ defineEmits(['update:filter', 'delete-all-completed']);
 
 .filter-buttons {
   display: flex;
-  gap: 10px;
+  gap: 6px;
+  background: #f5f3f0;
+  padding: 4px;
+  border-radius: 12px;
 }
 
 .filter-btn {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 20px;
+  padding: 10px 18px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: #5c5552;
 }
 
 .filter-btn:hover {
-  background: #f5f5f5;
+  background: rgba(255, 255, 255, 0.6);
+  color: #1a1614;
 }
 
 .filter-btn.active {
-  background: #fa0101;
-  color: white;
-  border-color: #fa0101;
+  background: #ffffff;
+  color: #e07a5f;
+  box-shadow: 0 1px 3px rgba(26, 22, 20, 0.08);
+  font-weight: 600;
 }
 
 .btn-delete-all {
-  background: #ff6b6b;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 10px 16px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: all 150ms ease;
+}
+
+.btn-delete-all:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
 }
 
 /* Responsive */
@@ -100,6 +116,22 @@ defineEmits(['update:filter', 'delete-all-completed']);
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
+    padding: 16px;
+  }
+
+  .filter-buttons {
+    width: 100%;
+  }
+
+  .filter-btn {
+    flex: 1;
+    text-align: center;
+    padding: 12px 10px;
+  }
+
+  .btn-delete-all {
+    width: 100%;
+    text-align: center;
   }
 }
 </style>

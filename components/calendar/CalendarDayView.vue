@@ -67,104 +67,194 @@ function getEventsForHour(hour) {
 
 <style scoped>
 .day-view {
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  background: var(--color-surface);
 }
 
 .day-header {
-  background: #f8f9fa;
-  padding: 20px;
+  background: var(--color-bg-secondary);
+  padding: 24px 20px;
   text-align: center;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+}
+
+.day-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: var(--color-accent);
+  border-radius: 3px 3px 0 0;
 }
 
 .day-header h4 {
   margin: 0;
-  font-size: 20px;
-  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
 }
 
 .day-content {
   max-height: 600px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+.day-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.day-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.day-content::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 3px;
 }
 
 .day-hour {
   display: grid;
-  grid-template-columns: 80px 1fr;
-  border-bottom: 1px solid #eee;
-  min-height: 80px;
+  grid-template-columns: 72px 1fr;
+  border-bottom: 1px solid var(--border-color);
+  min-height: 72px;
+  transition: background var(--transition-fast);
+}
+
+.day-hour:last-child {
+  border-bottom: none;
+}
+
+.day-hour:hover {
+  background: var(--color-bg-secondary);
 }
 
 .hour-label {
-  padding: 15px 10px;
-  font-size: 12px;
-  color: #666;
-  text-align: center;
-  border-right: 1px solid #ddd;
-  background: #fafafa;
+  padding: 12px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  text-align: right;
+  border-right: 1px solid var(--border-color);
+  background: var(--color-bg-secondary);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
 }
 
 .hour-content {
-  padding: 8px;
+  padding: 8px 12px;
   cursor: pointer;
-}
-
-.hour-content:hover {
-  background: #f8f9fa;
+  min-height: 72px;
 }
 
 .day-event {
-  background: linear-gradient(135deg, #fa0101, #c80101);
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
   color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin-bottom: 4px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(224, 122, 95, 0.25);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.day-event::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .day-event:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 6px 16px rgba(224, 122, 95, 0.35);
 }
 
 .day-event.shared-event {
-  background: linear-gradient(135deg, #28a745, #1e7e34);
+  background: linear-gradient(135deg, var(--color-secondary) 0%, #6a9175 100%);
+  box-shadow: 0 2px 8px rgba(129, 168, 141, 0.25);
 }
 
 .day-event.shared-event:hover {
-  background: linear-gradient(135deg, #1e7e34, #155724);
+  box-shadow: 0 6px 16px rgba(129, 168, 141, 0.35);
 }
 
 .day-event .event-time {
-  font-weight: 600;
-  font-size: 12px;
+  font-weight: 700;
+  font-size: 11px;
   opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .day-event .event-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  margin: 2px 0;
+  margin: 4px 0;
 }
 
 .day-event .event-description {
-  font-size: 12px;
-  opacity: 0.8;
+  font-size: 13px;
+  opacity: 0.85;
+  line-height: 1.4;
+  margin-top: 4px;
 }
 
 .day-event .event-creator {
   font-size: 11px;
-  opacity: 0.7;
+  opacity: 0.75;
   font-style: italic;
-  margin-top: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 @media (max-width: 768px) {
   .day-hour {
-    grid-template-columns: 60px 1fr;
+    grid-template-columns: 56px 1fr;
+    min-height: 64px;
+  }
+
+  .hour-label {
+    font-size: 10px;
+    padding: 10px 8px;
+  }
+
+  .hour-content {
+    padding: 6px 10px;
+  }
+
+  .day-header {
+    padding: 18px 16px;
+  }
+
+  .day-header h4 {
+    font-size: 16px;
+  }
+
+  .day-event {
+    padding: 10px 12px;
+  }
+
+  .day-event .event-title {
+    font-size: 14px;
+  }
+
+  .day-event .event-description {
+    font-size: 12px;
   }
 }
 </style>

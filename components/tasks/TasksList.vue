@@ -55,12 +55,46 @@ function shouldShowDueDate(task) {
 .tasks-list {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 30px;
+  padding: 24px 28px;
+  scrollbar-width: thin;
+  scrollbar-color: #b5b0ab transparent;
+}
+
+.tasks-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tasks-list::-webkit-scrollbar-thumb {
+  background: #b5b0ab;
+  border-radius: 3px;
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
-  color: #999;
+  padding: 80px 24px;
+  color: #8a8582;
+}
+
+.empty-state::before {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #e07a5f 0%, #d4644a 100%);
+  border-radius: 50%;
+  opacity: 0.12;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .tasks-list {
+    padding: 16px;
+  }
 }
 </style>

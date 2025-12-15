@@ -337,33 +337,68 @@ function toggleSidebar() {
 
 <style scoped>
 .chat-page {
-  min-height: calc(100vh - 64px);
-  padding: 20px;
-  background: #f5f5f5;
+  min-height: calc(100vh - 68px);
+  padding: 24px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .chat-container {
   display: flex;
-  height: calc(100vh - 104px);
-  background: white;
-  border-radius: 8px;
+  height: calc(100vh - 116px);
+  background: #ffffff;
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow:
+    0 4px 6px rgba(26, 22, 20, 0.02),
+    0 12px 24px rgba(26, 22, 20, 0.06);
+  border: 1px solid rgba(26, 22, 20, 0.06);
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .main-chat {
   flex: 1;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(180deg, #faf9f7 0%, #f5f3f0 100%);
+  position: relative;
 }
 
 .no-conversation {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #999;
-  font-size: 18px;
+  color: #8a8582;
+  font-size: 16px;
+  gap: 16px;
+}
+
+.no-conversation::before {
+  content: '';
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #e07a5f 0%, #d4644a 100%);
+  border-radius: 50%;
+  opacity: 0.15;
+  margin-bottom: 8px;
+}
+
+.no-conversation p {
+  margin: 0;
+  font-weight: 500;
 }
 
 /* Responsive */
@@ -375,6 +410,8 @@ function toggleSidebar() {
   .chat-container {
     height: calc(100vh - 64px);
     border-radius: 0;
+    border: none;
+    box-shadow: none;
   }
 
   .main-chat {
@@ -390,16 +427,20 @@ function toggleSidebar() {
   transform: translateX(-50%);
   width: calc(100% - 40px);
   max-width: 400px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow:
+    0 4px 12px rgba(26, 22, 20, 0.08),
+    0 20px 40px rgba(26, 22, 20, 0.16);
+  border: 1px solid rgba(26, 22, 20, 0.06);
   z-index: 10000;
-  animation: slideDown 0.3s ease-out;
+  animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
+  backdrop-filter: blur(12px);
 }
 
 .mobile-notification-banner.fade-out {
-  animation: slideUp 0.3s ease-in;
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 1, 1);
 }
 
 @keyframes slideDown {
@@ -425,7 +466,7 @@ function toggleSidebar() {
 }
 
 .mobile-notification-banner .notification-content {
-  padding: 16px;
+  padding: 16px 20px;
 }
 
 .mobile-notification-banner .notification-header {
@@ -436,34 +477,36 @@ function toggleSidebar() {
 }
 
 .mobile-notification-banner .notification-header strong {
-  color: #fa0101;
-  font-size: 16px;
+  color: #e07a5f;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .mobile-notification-banner .notification-close {
   background: none;
   border: none;
-  font-size: 24px;
-  color: #999;
+  font-size: 20px;
+  color: #b5b0ab;
   cursor: pointer;
   padding: 0;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s;
+  border-radius: 8px;
+  transition: all 150ms ease;
 }
 
 .mobile-notification-banner .notification-close:hover {
-  background: #f5f5f5;
+  background: #f5f3f0;
+  color: #5c5552;
 }
 
 .mobile-notification-banner .notification-body {
-  color: #333;
+  color: #1a1614;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;

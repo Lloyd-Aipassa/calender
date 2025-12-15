@@ -754,8 +754,18 @@ watch(showAddTask, (isShown) => {
 <style scoped>
 .tasks-page {
   display: flex;
-  height: calc(100vh - 60px);
-  background: #f5f5f5;
+  height: calc(100vh - 68px);
+  background: linear-gradient(135deg, #faf9f7 0%, #f5f3f0 50%, #faf9f7 100%);
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .tasks-main {
@@ -763,12 +773,14 @@ watch(showAddTask, (isShown) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: transparent;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .tasks-page {
     flex-direction: column;
+    height: calc(100vh - 64px);
   }
 }
 </style>

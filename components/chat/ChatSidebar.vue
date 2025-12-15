@@ -81,65 +81,99 @@ function formatDate(timestamp) {
 <style scoped>
 /* Sidebar */
 .sidebar {
-  width: 320px;
-  border-right: 1px solid #e0e0e0;
+  width: 340px;
+  border-right: 1px solid rgba(26, 22, 20, 0.08);
   display: flex;
   flex-direction: column;
+  background: #ffffff;
 }
 
 .sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(26, 22, 20, 0.06);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #fff;
+  background: #ffffff;
 }
 
 .sidebar-header h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1614;
+  letter-spacing: -0.02em;
 }
 
 .new-chat-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #4caf50;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e07a5f 0%, #d4644a 100%);
   color: white;
   border: none;
-  font-size: 24px;
+  font-size: 22px;
+  font-weight: 300;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(224, 122, 95, 0.3);
 }
 
 .new-chat-btn:hover {
-  background: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(224, 122, 95, 0.4);
+}
+
+.new-chat-btn:active {
+  transform: translateY(0);
 }
 
 .empty-state {
-  padding: 40px 20px;
+  padding: 48px 24px;
   text-align: center;
-  color: #999;
+  color: #8a8582;
+  font-size: 14px;
 }
 
 .conversation {
-  padding: 15px 20px;
+  padding: 16px 20px;
   cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid rgba(26, 22, 20, 0.04);
   display: flex;
   justify-content: space-between;
-  transition: background 0.2s;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.conversation::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #e07a5f;
+  opacity: 0;
+  transition: opacity 150ms ease;
 }
 
 .conversation:hover {
-  background: #f8f8f8;
+  background: #faf9f7;
+}
+
+.conversation:hover::before {
+  opacity: 0.5;
 }
 
 .conversation.active {
-  background: #e3f2fd;
+  background: linear-gradient(90deg, rgba(224, 122, 95, 0.08) 0%, rgba(224, 122, 95, 0.02) 100%);
+}
+
+.conversation.active::before {
+  opacity: 1;
 }
 
 .conv-content {
@@ -150,37 +184,67 @@ function formatDate(timestamp) {
 .conv-content strong {
   display: block;
   margin-bottom: 4px;
-  font-size: 15px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1614;
 }
 
 .last-message {
   margin: 0;
   font-size: 13px;
-  color: #666;
+  color: #8a8582;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.4;
 }
 
 .conv-meta {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: 6px;
+  margin-left: 12px;
 }
 
 .badge {
-  background: #ff5722;
+  background: linear-gradient(135deg, #e07a5f 0%, #d4644a 100%);
   color: white;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 2px 8px;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(224, 122, 95, 0.3);
 }
 
 .time {
   font-size: 11px;
-  color: #999;
+  color: #b5b0ab;
+  font-weight: 500;
+}
+
+/* Conversation list animation */
+.conversation {
+  animation: slideIn 0.3s ease-out backwards;
+}
+
+.conversation:nth-child(1) { animation-delay: 0.05s; }
+.conversation:nth-child(2) { animation-delay: 0.1s; }
+.conversation:nth-child(3) { animation-delay: 0.15s; }
+.conversation:nth-child(4) { animation-delay: 0.2s; }
+.conversation:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @media (max-width: 768px) {
@@ -188,28 +252,32 @@ function formatDate(timestamp) {
     width: 100%;
     position: absolute;
     z-index: 10;
-    background: white;
+    background: #ffffff;
     height: 100%;
-    transition: transform 0.3s;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .sidebar.hidden {
     transform: translateX(-100%);
   }
 
+  .sidebar-header {
+    padding: 20px 16px;
+  }
+
   .sidebar-header h3 {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .new-chat-btn {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     font-size: 20px;
+    border-radius: 10px;
   }
 
   .conversation {
-    padding: 12px 15px;
-    background-color: #fff;
+    padding: 14px 16px;
   }
 
   .conv-content strong {

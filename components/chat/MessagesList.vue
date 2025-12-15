@@ -46,19 +46,40 @@ defineExpose({
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
-  background: #fafafa;
+  padding: 24px;
+  background: linear-gradient(180deg, #faf9f7 0%, #f5f3f0 100%);
+  scrollbar-width: thin;
+  scrollbar-color: #b5b0ab transparent;
+}
+
+.messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background: #b5b0ab;
+  border-radius: 3px;
 }
 
 .message {
-  margin-bottom: 20px;
-  max-width: 60%;
-  animation: fadeIn 0.2s;
+  margin-bottom: 16px;
+  max-width: 65%;
+  animation: messageIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .message.own {
@@ -70,44 +91,70 @@ defineExpose({
 }
 
 .message .sender {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 4px;
-  font-weight: 500;
+  font-size: 11px;
+  color: #8a8582;
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding-left: 4px;
 }
 
 .message .content {
-  background: white;
-  padding: 10px 15px;
-  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: 16px;
   word-wrap: break-word;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(26, 22, 20, 0.06);
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1a1614;
+  border: 1px solid rgba(26, 22, 20, 0.04);
 }
 
 .message.own .content {
-  background: #4caf50;
+  background: linear-gradient(135deg, #e07a5f 0%, #d4644a 100%);
   color: white;
-  border-bottom-right-radius: 4px;
+  border-radius: 16px 16px 6px 16px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(224, 122, 95, 0.25);
 }
 
 .message.other .content {
-  background: white;
-  border-bottom-left-radius: 4px;
+  background: #ffffff;
+  border-radius: 16px 16px 16px 6px;
 }
 
 .message .time {
-  font-size: 11px;
-  color: #999;
-  margin-top: 4px;
+  font-size: 10px;
+  color: #b5b0ab;
+  margin-top: 6px;
+  font-weight: 500;
+  padding: 0 4px;
 }
 
 .message.own .time {
   text-align: right;
+  color: #b5b0ab;
 }
 
 @media (max-width: 768px) {
+  .messages {
+    padding: 16px;
+  }
+
   .message {
     max-width: 85%;
+    margin-bottom: 12px;
+  }
+
+  .message .content {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .message .sender {
+    font-size: 10px;
   }
 }
 </style>

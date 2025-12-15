@@ -71,117 +71,191 @@ function getEventsForDayHour(date, hour) {
 
 <style scoped>
 .week-view {
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  background: var(--color-surface);
 }
 
 .week-header {
   display: grid;
-  grid-template-columns: 80px repeat(7, 1fr);
-  background: #f8f9fa;
-  border-bottom: 1px solid #ddd;
+  grid-template-columns: 72px repeat(7, 1fr);
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .time-column {
-  border-right: 1px solid #ddd;
+  border-right: 1px solid var(--border-color);
 }
 
 .week-day-header {
-  padding: 15px 10px;
+  padding: 16px 8px;
   text-align: center;
-  border-right: 1px solid #eee;
+  border-right: 1px solid var(--border-color);
+  transition: background var(--transition-fast);
 }
 
 .week-day-header:last-child {
   border-right: none;
 }
 
+.week-day-header:hover {
+  background: var(--color-bg-tertiary);
+}
+
 .day-name {
   font-weight: 600;
-  color: #666;
-  font-size: 12px;
-  margin-bottom: 4px;
+  color: var(--color-text-tertiary);
+  font-size: 11px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .day-date {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
+  color: var(--color-text-primary);
 }
 
 .day-date.today {
-  color: #fa0101;
-  background: white;
+  color: white;
+  background: var(--color-accent);
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto;
+  box-shadow: 0 2px 8px rgba(224, 122, 95, 0.3);
 }
 
 .week-content {
   max-height: 600px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+.week-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.week-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.week-content::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 3px;
 }
 
 .time-slot {
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.time-slot:last-child {
+  border-bottom: none;
 }
 
 .hour-row {
   display: grid;
-  grid-template-columns: 80px repeat(7, 1fr);
-  min-height: 60px;
+  grid-template-columns: 72px repeat(7, 1fr);
+  min-height: 56px;
 }
 
 .time-label {
-  padding: 10px;
-  font-size: 12px;
-  color: #666;
-  text-align: center;
-  border-right: 1px solid #ddd;
-  background: #fafafa;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  text-align: right;
+  border-right: 1px solid var(--border-color);
+  background: var(--color-bg-secondary);
 }
 
 .day-cell {
-  border-right: 1px solid #eee;
+  border-right: 1px solid var(--border-color);
   padding: 4px;
   cursor: pointer;
   position: relative;
+  transition: background var(--transition-fast);
+}
+
+.day-cell:last-child {
+  border-right: none;
 }
 
 .day-cell:hover {
-  background: #f8f9fa;
+  background: var(--color-bg-secondary);
 }
 
 .week-event {
-  background: #fa0101;
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
   color: white;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 11px;
-  margin-bottom: 2px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  margin-bottom: 3px;
   cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(224, 122, 95, 0.25);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .week-event:hover {
-  background: #c80101;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 3px 8px rgba(224, 122, 95, 0.35);
 }
 
 .week-event.shared-event {
-  background: #28a745;
+  background: linear-gradient(135deg, var(--color-secondary) 0%, #6a9175 100%);
+  box-shadow: 0 1px 3px rgba(129, 168, 141, 0.25);
 }
 
 .week-event.shared-event:hover {
-  background: #1e7e34;
+  box-shadow: 0 3px 8px rgba(129, 168, 141, 0.35);
 }
 
 @media (max-width: 768px) {
   .week-header,
   .hour-row {
-    grid-template-columns: 60px repeat(7, 1fr);
+    grid-template-columns: 50px repeat(7, 1fr);
+  }
+
+  .week-day-header {
+    padding: 12px 4px;
+  }
+
+  .day-name {
+    font-size: 10px;
+  }
+
+  .day-date {
+    font-size: 14px;
+  }
+
+  .day-date.today {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .time-label {
+    font-size: 10px;
+    padding: 8px 4px;
+  }
+
+  .hour-row {
+    min-height: 48px;
+  }
+
+  .week-event {
+    font-size: 9px;
+    padding: 2px 4px;
   }
 }
 </style>
