@@ -23,8 +23,8 @@ logs
 .env.*
 !.env.example
 
-# Mobile/Capacitor (not used)
-android/
+# Mobile/Capacitor
+# android/ - Uncommented to track Android configuration
 ios/
-capacitor.config.ts
-capacitor.config.json
+# capacitor.config.ts - Uncommented to track Capacitor configuration
+# capacitor.config.json - Uncommented to track Capacitor configuration
