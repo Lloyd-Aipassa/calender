@@ -155,7 +155,7 @@ defineEmits(['settings', 'add-event', 'logout']);
   .user-name {
     color: #1a1614;
     font-size: 15px;
-    padding-left: 8px;
+    padding-left: 9px;
   }
 
   .header-actions {
