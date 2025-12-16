@@ -96,8 +96,14 @@ const emit = defineEmits(['update:modelValue', 'send']);
 
 @media (max-width: 768px) {
   .input-area {
+    position: fixed;
+    bottom: 64px; /* Hoogte van de mobiele header */
+    left: 0;
+    right: 0;
     padding: 16px;
     gap: 10px;
+    z-index: 100;
+    box-shadow: 0 -4px 12px rgba(26, 22, 20, 0.08);
   }
 
   .input-area input {

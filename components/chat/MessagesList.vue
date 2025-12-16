@@ -141,6 +141,7 @@ defineExpose({
 @media (max-width: 768px) {
   .messages {
     padding: 16px;
+    padding-bottom: 80px; /* Ruimte voor de sticky input */
   }
 
   .message {
