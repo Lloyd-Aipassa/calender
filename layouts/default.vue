@@ -1,7 +1,7 @@
 <template>
   <div class="app-layout">
     <NavigationHeader />
-    
+
     <div class="content-spacer"></div>
     <main class="main-content">
       <slot />
@@ -40,14 +40,12 @@ onMounted(async () => {
 
   if (token) {
     try {
-
       // Fetch user info to get user ID
       const response = await fetch(`${apiBase}/get_user_info.php`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
-
 
       if (response.ok) {
         const data = await response.json();
@@ -61,8 +59,7 @@ onMounted(async () => {
         }
       } else {
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 });
 
@@ -70,15 +67,15 @@ useHead({
   link: [
     { rel: 'manifest', href: '/manifest.json' },
     { rel: 'apple-touch-icon', sizes: '192x192', href: '/icon-192.png' },
-    { rel: 'apple-touch-icon', sizes: '512x512', href: '/icon-512.png' }
+    { rel: 'apple-touch-icon', sizes: '512x512', href: '/icon-512.png' },
   ],
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover' },
     { name: 'apple-mobile-web-app-capable', content: 'yes' },
     { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
     { name: 'apple-mobile-web-app-title', content: 'Calendar' },
-    { name: 'theme-color', content: '#4caf50' }
-  ]
+    { name: 'theme-color', content: '#4caf50' },
+  ],
 });
 </script>
 
@@ -130,19 +127,21 @@ useHead({
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  padding-top: env(safe-area-inset-top);
 }
 
 * {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--color-bg-primary);
-  background-image:
-    radial-gradient(ellipse at 0% 0%, rgba(224, 122, 95, 0.05) 0%, transparent 50%),
+  background-image: radial-gradient(ellipse at 0% 0%, rgba(224, 122, 95, 0.05) 0%, transparent 50%),
     radial-gradient(ellipse at 100% 100%, rgba(129, 168, 141, 0.05) 0%, transparent 50%);
   overflow: hidden;
   position: fixed;
