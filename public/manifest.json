@@ -1,6 +1,6 @@
 {
-  "name": "Gedeelde Kalender",
-  "short_name": "Kalender",
+  "name": "Harmony",
+  "short_name": "Harmony",
   "description": "Gedeelde agenda met real-time synchronisatie",
   "start_url": "/",
   "display": "standalone",

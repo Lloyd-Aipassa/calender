@@ -23,6 +23,11 @@ logs
 .env.*
 !.env.example
 
+# Google OAuth credentials
+client_secret_*.json
+credentials.json
+token.json
+
 # Mobile/Capacitor
 # android/ - Uncommented to track Android configuration
 ios/
